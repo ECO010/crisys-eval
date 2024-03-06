@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<AnchorPane prefHeight="500.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.securityevaluationtool.AttackNodeCardController">
+
+    <VBox alignment="CENTER" prefHeight="350.0" prefWidth="600.0" spacing="10" xmlns:fx="http://javafx.com/fxml">
+        <Label style="-fx-font-size: 16pt; -fx-font-weight: bold;" text="Attack Details" />
+        <HBox spacing="10">
+            <Label fx:id="nameLabel" text="Name: " />
+            <!--<Label fx:id="nameLabel" />-->
+        </HBox>
+        <HBox spacing="10">
+            <Label fx:id="capecIdLabel" text="CapecId: " />
+            <!--<Label fx:id="capecIdLabel" />-->
+        </HBox>
+        <HBox spacing="10">
+            <Label fx:id="descriptionLabel" text="Attack Description: " wrapText="true" />
+            <!--<Label fx:id="descriptionLabel" />-->
+        </HBox>
+        <HBox spacing="10">
+            <Label fx:id="likelihoodLabel" text="Likelihood: " />
+            <!--<Label fx:id="likelihoodLabel" />-->
+        </HBox>
+        <HBox spacing="10">
+            <Label fx:id="severityLabel" text="Severity: " />
+            <!--<Label fx:id="severityLabel" /> -->
+        </HBox>
+        <HBox spacing="10">
+            <Label text="Linked MITRE ATTACK ID's: " fx:id="taxonomyMappingLabel" />
+            <!--<Label fx:id="taxonomyMappingLabel" />-->
+        </HBox>
+        <!-- Add more controls as needed -->
+        <!-- Mitigation Box -->
+        <VBox fx:id="mitigationBox" spacing="5">
+            <Label text="Mitigations:" />
+            <!-- Here, add a CheckBox for each mitigation -->
+            <!-- If there are no mitigations, display a label -->
+            <!-- Example: -->
+            <!-- <Label text="This attack pattern has no known mitigations from the database" /> -->
+            <!-- <CheckBox text="Mitigation 1" /> -->
+            <!-- <CheckBox text="Mitigation 2" /> -->
+            <!-- ... -->
+        </VBox>
+    </VBox>
+
+</AnchorPane>
