@@ -53,8 +53,26 @@ public class LandingSceneController {
     }
 
     @FXML
-    protected void onCheckIcsAssetClick() {
-        System.out.println("TODO");
+    protected void onCheckIcsAssetClick(ActionEvent event) {
+        // Navigate to the Tree Prompt Screen
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("icsa-database-view.fxml"));
+            Parent root = loader.load();
+
+          /*  TreePromptSceneController controller = loader.getController();
+            controller.setPreviousController(this);*/
+
+            Stage stage = new Stage();
+            stage.setScene(new Scene(root));
+            stage.setTitle("ICS Advisory Database");
+            stage.show();
+
+            // Close the current scene if needed
+            ((Node)(event.getSource())).getScene().getWindow().hide();
+        } catch (IOException e) {
+            e.printStackTrace();
+            // Handle loading error
+        }
     }
 
     @FXML
