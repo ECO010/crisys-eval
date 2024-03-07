@@ -11,6 +11,7 @@ module com.example.securityevaluationtool {
     requires eu.hansolo.tilesfx;
     requires java.sql;
     requires org.json;
+    requires org.apache.commons.csv;
 
     opens com.example.securityevaluationtool to javafx.fxml;
     exports com.example.securityevaluationtool;

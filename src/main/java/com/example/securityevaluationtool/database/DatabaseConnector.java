@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+//TODO: CLean up all DB files and remove personal data, just leave structure of how data was fetched and sent to the DB
 public class DatabaseConnector {
     public static Connection connect() {
         Connection conn = null;
