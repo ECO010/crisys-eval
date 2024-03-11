@@ -167,7 +167,7 @@ public class TreeViewSceneController {
     // Open New Window
     // Based on the mitigations shown throughout the tree (root and its descendants) how prepared are you to prevent this attack?
     // Can't recall Mitigations? Option to View Mitigations again (just go back to treeView)
-    // Options: Extremely Prepared, Somewhat Prepared, Neither Prepared Nor Unprepared, Somewhat Unprepared, Extremely Unprepared
+    // Options: Extremely Prepared, Somewhat Prepared, Neither Prepared Nor Unprepared, Somewhat Unprepared, Extremely Unprepared (Make them an Enum and factor them into score calculation)
     // get final score using linked Cumulative CVSS (from linked CWE's) and response
     // or using likelihood/severity of attack pattern and response
     // no mitigations? no score just linked CWE's and CVE's for the analyst to do some research on.
