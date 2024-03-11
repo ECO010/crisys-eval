@@ -6,12 +6,12 @@
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="800.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.securityevaluationtool.IcsaDatabaseViewController">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="700.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.securityevaluationtool.IcsaDatabaseViewController">
    <children>
-      <ComboBox fx:id="cvssSeverityComboBox" layoutX="51.0" layoutY="109.0" onAction="#onSeverityComboClick" prefHeight="25.0" prefWidth="169.0" promptText="Filter by CVSS Severity" />
-      <TableView fx:id="table" layoutX="51.0" layoutY="175.0" prefHeight="503.0" prefWidth="1178.0">
+      <ComboBox fx:id="cvssSeverityComboBox" layoutX="41.0" layoutY="109.0" onAction="#onSeverityComboClick" prefHeight="25.0" prefWidth="169.0" promptText="Filter by CVSS Severity" />
+      <TableView fx:id="table" layoutY="165.0" prefHeight="465.0" prefWidth="1000.0">
         <columns>
-          <TableColumn fx:id="icsaid" prefWidth="75.0" text="ICSA ID" />
+          <TableColumn fx:id="icsaid" prefWidth="100.0" text="ICSA ID" />
             <TableColumn fx:id="icsaAdvisoryTitle" prefWidth="75.0" text="ICSA Title" />
           <TableColumn fx:id="releaseYear" prefWidth="75.0" text="Year " />
             <TableColumn fx:id="cveNumber" prefWidth="75.0" text="CVE Num" />
@@ -29,7 +29,7 @@
          </columnResizePolicy>
       </TableView>
       <ComboBox fx:id="assetTypeComboBox" layoutX="246.0" layoutY="63.0" onAction="#onAssetTypeComboClick" prefHeight="25.0" prefWidth="169.0" promptText="Filter by Affected Assets" />
-      <ComboBox fx:id="yearComboBox" layoutX="51.0" layoutY="63.0" onAction="#onYearComboClick" prefHeight="25.0" prefWidth="169.0" promptText="Filter by Release Year" />
-      <Button layoutX="573.0" layoutY="702.0" mnemonicParsing="false" onAction="#onBackClick" prefHeight="25.0" prefWidth="135.0" text="Back" />
+      <ComboBox fx:id="yearComboBox" layoutX="41.0" layoutY="63.0" onAction="#onYearComboClick" prefHeight="25.0" prefWidth="169.0" promptText="Filter by Release Year" />
+      <Button fx:id="backBtn" layoutX="443.0" layoutY="661.0" mnemonicParsing="false" onAction="#onBackClick" prefHeight="25.0" prefWidth="135.0" text="Back" />
    </children>
 </AnchorPane>

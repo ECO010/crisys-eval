@@ -7,6 +7,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.TreeItem;
 import javafx.scene.layout.VBox;
@@ -20,12 +21,12 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.stream.Collectors;
 
 public class TreePromptSceneController {
 
     private static final String GET_ATTACK_IMPACTS = "SELECT DISTINCT Impact FROM AttackImpact";
     private static final String GET_ATTACK_SCOPES = "SELECT DISTINCT Scope FROM AttackScope";
+    public final String SCENE_TITLE = "Tree Prompt Scene";
 
     @FXML
     private VBox attackImpactBox;
@@ -73,10 +74,34 @@ public class TreePromptSceneController {
     }
 
     /**
-     * Get the random CapecId that will serve as the tree's root
-     * TODO: Handle Case where both scope and impact are selected (Error, Popup, Combination of tables, etc)
+     * The main logic which gets the list of capec id's which would be used to generate attack trees
      */
-    private int getRootCapecIdForAttackTree() {
+    private void generateAttackTree(int rootCapecId, TreeItem<AttackPattern> parentNode) {
+        RelatedAttackDAO relatedAttackDAO = new RelatedAttackDAO();
+
+        List<AttackPattern> relatedAttacks = relatedAttackDAO.fetchRelatedAttacks(rootCapecId);
+        System.out.println(relatedAttacks.size());
+
+        // For each related attack, create a TreeItem and add it as a child of the parent node
+        for (AttackPattern relatedAttack : relatedAttacks) {
+            TreeItem<AttackPattern> childNode = new TreeItem<>(relatedAttack);
+            parentNode.getChildren().add(childNode);
+
+            // Print the contents of the current node for testing
+            System.out.println("Node CapecId: " + relatedAttack.getCapecId());
+            System.out.println("Node Attack Pattern Name: " + relatedAttack.getName());
+
+            // Recursively construct the tree for the child attack
+            generateAttackTree(relatedAttack.getCapecId(), childNode);
+        }
+    }
+
+    /**
+     * Display the tree on a new scene as a TreeView
+     */
+    @FXML
+    private void onNextClick(ActionEvent event) {
+
         // Random CapecId should be selected from the list of CapecId's
         int randomCapecId = 0;
         List <Integer> capecIds = new ArrayList<>();
@@ -109,7 +134,17 @@ public class TreePromptSceneController {
             }
         }
 
-        if (isAnyScopeSelected) {
+        // Handle Impact Selection
+        // Check if any impact checkbox is selected
+        for (CheckBox impactCheckBox : impactCheckBoxList) {
+            if (impactCheckBox.isSelected()) {
+                isAnyImpactSelected = true;
+                impactSelectedOptions.add("'" + impactCheckBox.getText() + "'");
+            }
+        }
+
+        // Check only Scope is Selected
+        if (isAnyScopeSelected && !isAnyImpactSelected) {
             // If there's only one selected option
             if (scopeSelectedOptions.size() == 1) {
                 scopeQueryBuilder.append("(").append(scopeSelectedOptions.get(0)).append(")");
@@ -146,16 +181,8 @@ public class TreePromptSceneController {
             }
         }
 
-        // Handle Impact Selection
-        // Check if any impact checkbox is selected
-        for (CheckBox impactCheckBox : impactCheckBoxList) {
-            if (impactCheckBox.isSelected()) {
-                isAnyImpactSelected = true;
-                impactSelectedOptions.add("'" + impactCheckBox.getText() + "'");
-            }
-        }
-
-        if (isAnyImpactSelected) {
+        // Check only Impact is Selected
+        if (isAnyImpactSelected && !isAnyScopeSelected) {
             // If there's only one selected option
             if (impactSelectedOptions.size() == 1) {
                 impactQueryBuilder.append("(").append(impactSelectedOptions.get(0)).append(")");
@@ -192,6 +219,16 @@ public class TreePromptSceneController {
             }
         }
 
+        // Both are selected, error and make sure the right input is gotten before generating the tree.
+        if (isAnyImpactSelected && isAnyScopeSelected) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText("Selection Error");
+            alert.setContentText("Please select either Impact or Scope, not both.");
+            alert.showAndWait();
+            return; //Prevent navigation
+        }
+
         // No filter selected, use a random ID from all ICS Attack patterns
         if (!isAnyScopeSelected && !isAnyImpactSelected) {
             AttackPatternDAO attackPatternDAO = new AttackPatternDAO();
@@ -201,44 +238,14 @@ public class TreePromptSceneController {
             // Testing selected id
             System.out.println(randomCapecId);
         }
-        return randomCapecId;
-    }
-
-    /**
-     * The main logic which gets the list of capec id's which would be used to generate attack trees
-     */
-    private void generateAttackTree(int rootCapecId, TreeItem<AttackPattern> parentNode) {
-        RelatedAttackDAO relatedAttackDAO = new RelatedAttackDAO();
-
-        List<AttackPattern> relatedAttacks = relatedAttackDAO.fetchRelatedAttacks(rootCapecId);
-        System.out.println(relatedAttacks.size());
-
-        // For each related attack, create a TreeItem and add it as a child of the parent node
-        for (AttackPattern relatedAttack : relatedAttacks) {
-            TreeItem<AttackPattern> childNode = new TreeItem<>(relatedAttack);
-            parentNode.getChildren().add(childNode);
-
-            // Print the contents of the current node for testing
-            System.out.println("Node CapecId: " + relatedAttack.getCapecId());
-            System.out.println("Node Attack Pattern Name: " + relatedAttack.getName());
-
-            // Recursively construct the tree for the child attack
-            generateAttackTree(relatedAttack.getCapecId(), childNode);
-        }
-    }
-
-    /**
-     * Display the tree on a new scene as a TreeView
-     */
-    @FXML
-    private void onNextClick(ActionEvent event) {
 
         // Set RandomId fetched as root
-        int rootCapecId = getRootCapecIdForAttackTree();
+        int rootCapecId = randomCapecId;
 
         // Create instances of the DAOs needed
         AttackPatternDAO attackPatternDAO = new AttackPatternDAO();
         TaxonomyMappingDAO taxonomyMappingDAO = new TaxonomyMappingDAO();
+        MitigationDAO mitigationDAO = new MitigationDAO();
 
         // Create a TreeItem for the root node
         AttackPattern rootAttack = new AttackPattern();
@@ -253,14 +260,8 @@ public class TreePromptSceneController {
         List<TaxonomyMapping> taxonomyMappings = taxonomyMappingDAO.getTaxonomyMappingsForAttack(rootCapecId);
         rootAttack.setTaxonomyMappings(taxonomyMappings);
 
-        // Map each object to its ID as a string
-        List<String> idStrings = taxonomyMappings.stream()
-                .map(TaxonomyMapping::getAttackTechniqueId)
-                .map(String::valueOf) // Convert ID to string
-                .collect(Collectors.toList());
-
-        // Join the ID strings with a comma delimiter
-        String result = String.join(", ", idStrings);
+        List<Mitigation> mitigations = mitigationDAO.getMitigationsForAttack(rootCapecId);
+        rootAttack.setMitigations(mitigations);
 
         //TreeItem<AttackPattern> rootNode = new TreeItem<>(rootAttack);
         TreeItem<AttackPattern> rootNode = CustomTreeItemFactory.createTreeItem(rootAttack);
@@ -284,11 +285,12 @@ public class TreePromptSceneController {
 
             Stage stage = new Stage();
             stage.setScene(new Scene(root));
-            stage.setTitle("Tree View Scene");
+            stage.setTitle(treeViewSceneController.SCENE_TITLE);
             stage.show();
 
             // Close the current scene if needed
-            ((Node)(event.getSource())).getScene().getWindow().hide();
+            Stage currentStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            currentStage.close(); // Close instead of hide
         } catch (IOException e) {
             e.printStackTrace();
             // Handle loading error
@@ -314,6 +316,7 @@ public class TreePromptSceneController {
 
             // Set the scene of the current stage to the landing scene
             currentStage.setScene(new Scene(root));
+            currentStage.setTitle(landingSceneController.SCENE_TITLE);
 
             // Show the stage if it's not already showing
             if (!currentStage.isShowing()) {

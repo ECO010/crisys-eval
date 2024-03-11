@@ -9,11 +9,13 @@ import java.io.IOException;
 
 public class LandingScene extends Application {
 
+    // TODO: Handle transitions better. if you move from one scene to the other the scene should have the right title. Look at having final names for titles and calling them throughout
     @Override
     public void start(Stage stage) throws IOException {
         FXMLLoader fxmlLoader = new FXMLLoader(LandingScene.class.getResource("landing-scene.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 600, 400);
-        stage.setTitle("CriSysEval: A Security Evaluation Tool For Critical Systems");
+        LandingSceneController landingSceneController = new LandingSceneController();
+        stage.setTitle(landingSceneController.SCENE_TITLE);
         stage.setScene(scene);
         stage.show();
     }

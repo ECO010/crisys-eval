@@ -131,6 +131,7 @@ public class IcsaDatabaseViewController {
 
             // Set the scene of the current stage to the landing scene
             currentStage.setScene(new Scene(root));
+            currentStage.setTitle(landingSceneController.SCENE_TITLE);
 
             // Show the stage if it's not already showing
             if (!currentStage.isShowing()) {

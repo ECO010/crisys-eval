@@ -16,6 +16,8 @@ import java.util.Objects;
 
 public class LandingSceneController {
 
+    public final String SCENE_TITLE = "CriSysEval: A Security Evaluation Tool For Critical Systems";
+
     // TODO:
     //  Implement ICS Asset vulnerability functionality:
     //  Get Asset data into DB, Get Vulnerability data into DB, Display them on another scene
@@ -36,16 +38,18 @@ public class LandingSceneController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("tree-prompt-scene.fxml"));
             Parent root = loader.load();
 
-          /*  TreePromptSceneController controller = loader.getController();
-            controller.setPreviousController(this);*/
+          TreePromptSceneController treePromptSceneController = loader.getController();
+            /*controller.setPreviousController(this);*/
 
             Stage stage = new Stage();
             stage.setScene(new Scene(root));
-            stage.setTitle("Tree Prompt Scene");
+            stage.setTitle(treePromptSceneController.SCENE_TITLE);
             stage.show();
 
             // Close the current scene if needed
-            ((Node)(event.getSource())).getScene().getWindow().hide();
+            Stage currentStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            currentStage.close(); // Close instead of hide
+            //((Node)(event.getSource())).getScene().getWindow().hide();
         } catch (IOException e) {
             e.printStackTrace();
             // Handle loading error
@@ -68,7 +72,8 @@ public class LandingSceneController {
             stage.show();
 
             // Close the current scene if needed
-            ((Node)(event.getSource())).getScene().getWindow().hide();
+            Stage currentStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            currentStage.close(); // Close instead of hide
         } catch (IOException e) {
             e.printStackTrace();
             // Handle loading error
