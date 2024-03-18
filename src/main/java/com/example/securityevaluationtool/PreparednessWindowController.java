@@ -29,6 +29,8 @@ public class PreparednessWindowController {
     @FXML
     private Button continueBtn;
 
+    private String selectedOption;
+
     @FXML
     private void initialize() {
         List<String> options = new ArrayList<>();
@@ -59,6 +61,10 @@ public class PreparednessWindowController {
         // Close Tree view
         closeTreeViewScene();
 
+        // Calculate security score
+        calculateSecurityScore();
+
+        // Navigate to Evaluation End Scene/Window
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("evaluation-end.fxml"));
             Parent root = loader.load();
@@ -83,6 +89,22 @@ public class PreparednessWindowController {
         }
     }
 
+    @FXML
+    private void onComboBoxClick() {
+        selectedOption = comboBox.getValue();
+    }
+
+    // get final score using some or all of the following
+    // linked Cumulative CVSS (from linked CWE's) and number of Cve's per linked CWE
+    // User response changed to an Enum (as a sort of multiplier)
+    // Likelihood and Severity of Attack Pattern, Maybe Skills needed to successfully execute the attack pattern
+    // number of distinct mitigations throughout the tree (more mitigations, lower score as there's more to do / be aware of)
+    // no mitigations? (maybe no score and just link related CWE's/Cve's)
+    // no score just linked CWE's and Cve's for the analyst to do some research on.
+    private void calculateSecurityScore() {
+
+    }
+
     private void closeTreeViewScene() {
         // Get a list of all open windows
         List<Window> openWindows = Window.getWindows();
@@ -99,6 +121,40 @@ public class PreparednessWindowController {
                     break;
                 }
             }
+        }
+    }
+
+    public enum SecurityLevel {
+        EXTREMELY_PREPARED("Extremely Prepared", 5),
+        SOMEWHAT_PREPARED("Somewhat Prepared", 4),
+        NEITHER_PREPARED_NOR_UNPREPARED("Neither Prepared Nor Unprepared", 3),
+        SOMEWHAT_UNPREPARED("Somewhat Unprepared", 2),
+        EXTREMELY_UNPREPARED("Extremely Unprepared", 1);
+
+        private final String selectedOption;
+        private final int score;
+
+        SecurityLevel(String selectedOption, int score) {
+            this.selectedOption = selectedOption;
+            this.score = score;
+        }
+
+        public String getSelectedOption() {
+            return selectedOption;
+        }
+
+        public int getScore() {
+            return score;
+        }
+
+        // Method to get SecurityLevel enum from label
+        public static SecurityLevel fromSelectedOption(String option) {
+            for (SecurityLevel level : values()) {
+                if (level.selectedOption.equals(option)) {
+                    return level;
+                }
+            }
+            return null;
         }
     }
 }

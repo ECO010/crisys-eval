@@ -31,19 +31,22 @@ public class LandingSceneController {
         welcomeText.setText("Welcome to JavaFX Application!");
     }
 
+    // TODO: Evaluation date taken at the time button is clicked, evalId autoincrement, Eval name (Evaluation 001)
+    //  Create a new evaluation everytime Begin Eval is clicked, Name CS001 increasing incrementally (CS002, CS003) (root node)
     @FXML
     protected void onBeginEvaluationClick(ActionEvent event) {
         // Navigate to the Tree Prompt Screen
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("tree-prompt-scene.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("evaluation-start.fxml")); // change the file to test
             Parent root = loader.load();
 
-          TreePromptSceneController treePromptSceneController = loader.getController();
+          //TreePromptSceneController treePromptSceneController = loader.getController();
             /*controller.setPreviousController(this);*/
+            EvaluationStartController evaluationStartController = loader.getController();
 
             Stage stage = new Stage();
             stage.setScene(new Scene(root));
-            stage.setTitle(treePromptSceneController.SCENE_TITLE);
+            stage.setTitle(evaluationStartController.SCENE_TITLE);
             stage.show();
 
             // Close the current scene if needed

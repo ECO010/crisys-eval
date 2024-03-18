@@ -84,6 +84,15 @@ public class AttackPattern {
     private List<AttackStep> attackSteps;
     private List<Consequence> consequences;
     private List<TaxonomyMapping> taxonomyMappings;
+    private List<CommonWeaknessEnumeration> relatedWeaknesses;
+
+    public List<CommonWeaknessEnumeration> getRelatedWeaknesses() {
+        return relatedWeaknesses;
+    }
+
+    public void setRelatedWeaknesses(List<CommonWeaknessEnumeration> relatedWeaknesses) {
+        this.relatedWeaknesses = relatedWeaknesses;
+    }
 
     public String getName() {
         return name;
@@ -185,7 +194,7 @@ public class AttackPattern {
         // List of attack patterns that will be saved to the db
         List<AttackPattern> attackPatternsToSave = new ArrayList<>();
 
-        String filePath = "C:\\Users\\okonj\\Downloads\\CAPEC xmls\\capec_latest.xml";
+        String filePath = "C:\\Users\\okonj\\Desktop\\SWANSEA FOLDER\\Dissertation (Project)\\CAPEC & CWE\\CAPEC xmls\\capec_latest.xml";
         try {
             // Create a FileInputStream to read the local file
             FileInputStream inputStream = new FileInputStream(filePath);
@@ -425,6 +434,37 @@ public class AttackPattern {
                         System.out.println("Warning: Attack pattern " + attackPatternCapecID + " has no mitigations");
                     }
 
+                    // Get Related Weaknesses
+                    NodeList weaknessInstances = attackPatternElement.getElementsByTagName("Related_Weaknesses");
+                    if (weaknessInstances.getLength() > 0) {
+                        // Create a list of weaknesses and a weakness object for our attack pattern
+                        Element weaknessInstance = (Element) weaknessInstances.item(0);
+                        NodeList weaknesses = weaknessInstance.getElementsByTagName("Related_Weakness");
+                        List<CommonWeaknessEnumeration> weaknessList = new ArrayList<>();
+
+                        // for each weakness, proceed to fetch the data and set them accordingly to the object
+                        for (int q = 0; q < weaknesses.getLength(); q++) {
+                            // New weakness for each node
+                            CommonWeaknessEnumeration weaknessEnumeration = new CommonWeaknessEnumeration();
+                            Element weakness = (Element) weaknesses.item(q);
+
+                            // Get and set cweId and capecId
+                            String cweId = weakness.getAttribute("CWE_ID");
+                            weaknessEnumeration.setCapecId(Integer.parseInt(attackPatternCapecID));
+                            weaknessEnumeration.setCweId("CWE-"+cweId);
+
+                            // add each weakness to the list
+                            weaknessList.add(weaknessEnumeration);
+                        }
+                        // In the end we add the list of weaknesses for our attack pattern
+                        attackPattern.setRelatedWeaknesses(weaknessList);
+                    }
+                    // If there is no mitigation print it to the screen and skip insert.
+                    else {
+                        attackPattern.setRelatedWeaknesses(new ArrayList<>()); // Assign an empty list.
+                        System.out.println("Warning: Attack pattern " + attackPatternCapecID + " has no related weaknesses");
+                    }
+
                     // Get Possible Indicators that the attack could have happened or is about to happen
                     NodeList indicatorsList = attackPatternElement.getElementsByTagName("Indicators");
                     if (indicatorsList.getLength() > 0) {
@@ -514,20 +554,16 @@ public class AttackPattern {
      * @param args
      */
     public static void main(String[] args) {
-        AttackPatternDAO attackPatternDAO = new AttackPatternDAO();
+        //AttackPatternDAO attackPatternDAO = new AttackPatternDAO();
         AttackPattern attackPattern = new AttackPattern();
 
         // Assume you have a list of AttackPattern objects obtained from XML parsing
         List<AttackPattern> attackPatterns = attackPattern.parseXMLDataFromCAPEC();
-
-        attackPatternDAO.saveAttackPatterns(attackPatterns);
-
-        /*RelatedAttackDAO relatedAttackDAO = new RelatedAttackDAO();
-
+        CommonWeaknessEnumerationDAO commonWeaknessEnumerationDAO = new CommonWeaknessEnumerationDAO();
+        //attackPatternDAO.saveAttackPatterns(attackPatterns);
         for (AttackPattern pattern : attackPatterns) {
-            //attackStepDAO.saveAttackSteps(pattern.getAttackSteps());
-            relatedAttackDAO.saveRelatedAttacks(pattern.getRelatedAttacks());
-        }*/
+            commonWeaknessEnumerationDAO.saveRelatedWeaknesses(pattern.getRelatedWeaknesses());
+        }
     }
 
     @Override

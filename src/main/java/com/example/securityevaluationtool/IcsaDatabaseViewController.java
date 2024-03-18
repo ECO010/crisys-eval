@@ -19,6 +19,7 @@ import javafx.stage.Stage;
 import java.io.IOException;
 import java.util.List;
 
+//TODO: Show Product and Vendor, maybe add filter. Add filter for CVENumber once CVEs have been added to the DB
 public class IcsaDatabaseViewController {
 
     @FXML
