@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Accordion?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<AnchorPane prefHeight="500.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.securityevaluationtool.WeaknessNodeCardController">
+
+    <VBox alignment="CENTER" prefHeight="350.0" prefWidth="600.0" spacing="10" xmlns:fx="http://javafx.com/fxml">
+        <Label style="-fx-font-size: 16pt; -fx-font-weight: bold;" text="Weakness Details" />
+        <HBox spacing="10">
+            <Label fx:id="nameLabel" text="Name: " />
+            <!--<Label fx:id="nameLabel" />-->
+        </HBox>
+        <HBox spacing="10">
+            <Label fx:id="cweIdLabel" text="Cwe Id: " />
+            <!--<Label fx:id="capecIdLabel" />-->
+        </HBox>
+        <HBox spacing="10">
+            <Label fx:id="likelihoodLabel" text="Likelihood Of Exploit: " />
+            <!--<Label fx:id="likelihoodLabel" />-->
+        </HBox>
+        <Accordion>
+            <panes>
+                <TitledPane animated="false" text="Linked CVE's">
+                    <content>
+                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                            <children>
+                                <TextArea fx:id="linkedCveTextArea" prefHeight="125.0" prefWidth="600.0" />
+                            </children>
+                        </AnchorPane>
+                    </content>
+                </TitledPane>
+                <TitledPane animated="false" text="Weakness Description">
+                    <content>
+                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                            <children>
+                                <TextArea fx:id="weaknessDescriptionTextArea" prefHeight="128.0" prefWidth="600.0" />
+                            </children>
+                        </AnchorPane>
+                    </content>
+                </TitledPane>
+                <TitledPane animated="false" text="Potential Mitigations">
+                    <content>
+                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                            <children>
+                                <TextArea fx:id="mitigationsTextArea" prefHeight="127.0" prefWidth="600.0" />
+                            </children>
+                        </AnchorPane>
+                    </content>
+                </TitledPane>
+            </panes>
+        </Accordion>
+    </VBox>
+
+</AnchorPane>

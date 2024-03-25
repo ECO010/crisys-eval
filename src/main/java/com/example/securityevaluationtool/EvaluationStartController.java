@@ -48,7 +48,7 @@ public class EvaluationStartController {
             Alert confirmation = new Alert(Alert.AlertType.CONFIRMATION);
             confirmation.setTitle("Confirm System Name");
             confirmation.setHeaderText(null);
-            confirmation.setContentText("Is '" + enteredText + "' the desired input?");
+            confirmation.setContentText("Is '" + enteredText + "' the correct system name?");
 
             // Add OK and Cancel buttons to the confirmation dialog
             confirmation.getButtonTypes().clear();
@@ -73,7 +73,6 @@ public class EvaluationStartController {
 
                 evaluationDAO.saveEvaluation(evaluation);
 
-
                 // Navigate to the Asset Declaration Screen
                 try {
                     FXMLLoader loader = new FXMLLoader(getClass().getResource("asset-declaration.fxml"));
@@ -81,15 +80,17 @@ public class EvaluationStartController {
 
                     AssetDeclarationController assetDeclarationController = loader.getController();
 
+                    // Pass the Evaluation object to the AssetDeclarationController
+                    assetDeclarationController.setCurrentEvaluation(evaluation);
+
                     Stage stage = new Stage();
                     stage.setScene(new Scene(root));
                     stage.setTitle(assetDeclarationController.SCENE_TITLE);
                     stage.show();
 
-                    // Close the current scene if needed
+                    // Close the current scene
                     Stage currentStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-                    currentStage.close(); // Close instead of hide
-                    //((Node)(event.getSource())).getScene().getWindow().hide();
+                    currentStage.close();
                 } catch (IOException e) {
                     e.printStackTrace();
                     // Handle loading error

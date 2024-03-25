@@ -1,5 +1,7 @@
 package com.example.securityevaluationtool;
 
+import com.example.securityevaluationtool.database.Evaluation;
+import com.example.securityevaluationtool.database.EvaluationAsset;
 import com.example.securityevaluationtool.database.EvaluationDAO;
 import com.example.securityevaluationtool.database.ICSAssetVulnerabilityDAO;
 import javafx.collections.FXCollections;
@@ -16,7 +18,9 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class AssetDeclarationController {
 
@@ -48,10 +52,19 @@ public class AssetDeclarationController {
     @FXML
     private ScrollPane scrollPane;
 
+    // DAOs
     private final EvaluationDAO evaluationDAO = new EvaluationDAO();
-
     private final ICSAssetVulnerabilityDAO icsAssetVulnerabilityDAO = new ICSAssetVulnerabilityDAO();
 
+    // Fields
+    private String assetType;
+    private String assetName;
+
+    // Field(s) and method(s) for getting data from previous controller
+    private Evaluation currentEvaluation;
+    public void setCurrentEvaluation(Evaluation currentEvaluation) {
+        this.currentEvaluation = currentEvaluation;
+    }
 
     @FXML
     private void initialize() {
@@ -101,17 +114,18 @@ public class AssetDeclarationController {
     // Confirm that all assets have been added
     // See if tree can be generated in the background then the user clicks continue to view tree
     @FXML
-    private void onContinueClick() {
+    private void onContinueClick(ActionEvent event) {
         boolean isAnyFieldEmpty = false;
+        List<EvaluationAsset> evaluationAssetsToSave = new ArrayList<>();
 
-        // Check if any of the text fields are empty
+        // Check if any of the fields are empty
         for (Node node : mainVBox.getChildren()) {
             if (node instanceof HBox) {
                 HBox row = (HBox) node;
                 for (Node childNode : row.getChildren()) {
                     if (childNode instanceof TextField) {
                         TextField textField = (TextField) childNode;
-                        String assetName = textField.getText().trim();
+                        assetName = textField.getText().trim();
                         System.out.println("Asset Name: " + assetName);
                         if (assetName.isEmpty()) {
                             isAnyFieldEmpty = true;
@@ -120,7 +134,7 @@ public class AssetDeclarationController {
                     }
                     else if (childNode instanceof ComboBox) {
                         ComboBox<String> comboBox = (ComboBox<String>) childNode;
-                        String assetType = comboBox.getValue();
+                        assetType = comboBox.getValue();
                         System.out.println("Combo box selected value: " + assetType);
                         if (assetType == null || assetType.isEmpty()) {
                             isAnyFieldEmpty = true;
@@ -131,10 +145,19 @@ public class AssetDeclarationController {
                 if (isAnyFieldEmpty) {
                     break;
                 }
+
+                // No fields are empty, create an EvaluationAsset object and set its fields
+                EvaluationAsset evaluationAsset = new EvaluationAsset();
+                evaluationAsset.setEvaluationID(evaluationDAO.getLatestEvalID());
+                evaluationAsset.setAssetName(assetName);
+                evaluationAsset.setAssetType(assetType);
+
+                // Add the evaluationAsset to the list of assets to be saved
+                evaluationAssetsToSave.add(evaluationAsset);
             }
         }
 
-        // If any fields are empty, show an alert
+        // If any fields are empty, error
         if (isAnyFieldEmpty) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error");
@@ -150,11 +173,49 @@ public class AssetDeclarationController {
             alert.setContentText("Please add at least one asset to continue with the evaluation.");
             alert.showAndWait();
         }
-        // Add assets EvaluationAssets table
-        // Navigate to another window which explains what's going on. Generating the tree
         else {
-            System.out.println("All fields filled. Continue with the desired action.");
+            // Confirm the assets, once we leave this page we can't come back, If they cancel clear assets to be saved until they click continue again
+            Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
+            confirmAlert.setTitle("Confirmation");
+            confirmAlert.setHeaderText("Confirm Saving Assets");
+            confirmAlert.setContentText("Are you sure you want to save the assets and continue?");
+
+            Optional<ButtonType> result = confirmAlert.showAndWait();
+            if (result.isPresent() && result.get() == ButtonType.OK) {
+                // Save the assets
+                evaluationDAO.saveEvaluationAssets(evaluationAssetsToSave);
+                System.out.println("Assets saved successfully.");
+
+                // Navigate to the Tree Prompt Screen
+                System.out.println("All fields filled. Navigating.");
+
+                try {
+                    FXMLLoader loader = new FXMLLoader(getClass().getResource("tree-prompt-scene.fxml"));
+                    Parent root = loader.load();
+
+                    TreePromptSceneController treePromptSceneController = loader.getController();
+
+                    // Send data to the tree prompt screen as this is where tree generation is done.
+                    treePromptSceneController.getCurrentEvaluation(currentEvaluation);
+                    treePromptSceneController.getEvaluationAssets(evaluationAssetsToSave);
+
+                    Stage stage = new Stage();
+                    stage.setScene(new Scene(root));
+                    stage.setTitle(treePromptSceneController.SCENE_TITLE);
+                    stage.show();
+
+                    // Close the current scene if needed
+                    Stage currentStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+                    currentStage.close(); // Close instead of hide
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    // Handle loading error
+                }
+            }
+            else {
+                // User canceled, Clear the evaluation assets list to stop duplicate assets from being added
+                evaluationAssetsToSave.clear();
+            }
         }
     }
 }
-

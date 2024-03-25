@@ -1,37 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.control.TextArea?>
 <?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.securityevaluationtool.TreePromptSceneController">
+<AnchorPane prefHeight="400.0" prefWidth="794.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.securityevaluationtool.TreePromptSceneController">
    <children>
-      <Label layoutX="134.0" layoutY="54.0" text="Your selection will be used to generate the attack tree">
+      <TextArea editable="false" layoutX="108.0" layoutY="100.0" prefHeight="100.0" prefWidth="579.0" text="The ICS Advisory database dates back to 2010, which means some weaknesses and attack patterns might not be entirely relevant to you. To cater for this concern, we have included an option for you to filter the timeframe to view more relvant weaknesses and attack patterns" wrapText="true">
          <font>
             <Font name="Arial Bold" size="13.0" />
          </font>
-         <tooltip>
-            <Tooltip text="An attack tree shows you a hierarchial view of patterns that threat actors use to achieve their goals. This evaluation tool generates attack trees tailored to ICS environments. ">
-               <font>
-                  <Font name="Arial" size="10.0" />
-               </font>
-            </Tooltip>
-         </tooltip>
-      </Label>
-      <Label layoutX="165.0" layoutY="32.0" prefHeight="22.0" prefWidth="270.0" text="Filter attack patterns by Impacts or Scopes.">
+      </TextArea>
+      <ComboBox fx:id="comboBox" layoutX="277.0" layoutY="269.0" onAction="#onComboClick" prefHeight="27.0" prefWidth="242.0" promptText="Please select a timeframe filter" />
+      <Label layoutX="108.0" layoutY="37.0" text="This tool evaluates the saftey of your assets by generating a tree of weaknesses and exploits.">
          <font>
             <Font name="Arial Bold" size="13.0" />
          </font>
       </Label>
-      <Button id="attackScopesBtn" layoutX="305.0" layoutY="92.0" mnemonicParsing="false" onAction="#onAttackScopeClick" prefHeight="30.0" prefWidth="204.0" text="Attack Scopes" />
-      <VBox id="attackScopeBox" fx:id="attackScopeBox" layoutX="305.0" layoutY="121.0" prefHeight="222.0" prefWidth="204.0" visible="false" />
-      <Button id="attackImpactsBtn" layoutX="74.0" layoutY="92.0" mnemonicParsing="false" onAction="#onAttackImpactClick" prefHeight="30.0" prefWidth="204.0" text="Attack Impacts" />
-      <VBox id="attackImpactBox" fx:id="attackImpactBox" layoutX="76.0" layoutY="121.0" prefHeight="222.0" prefWidth="204.0" visible="false" />
+      <Label layoutX="108.0" layoutY="67.0" prefHeight="22.0" prefWidth="579.0" text="The generated tree is built using data from CWE, CAPEC and CISA to ensure it's correctness.">
+         <font>
+            <Font name="Arial Bold" size="13.0" />
+         </font>
+      </Label>
 
-       <Button layoutX="481.0" layoutY="371.0" mnemonicParsing="false" onAction="#onNextClick" prefHeight="30.0" prefWidth="99.0" text="Next" />
-      <Button layoutX="14.0" layoutY="371.0" mnemonicParsing="false" onAction="#onBackClick" prefHeight="30.0" prefWidth="99.0" text="Back" />
+       <Button layoutX="339.0" layoutY="343.0" mnemonicParsing="false" onAction="#onNextClick" prefHeight="30.0" prefWidth="99.0" text="Next" />
+      <Label layoutX="118.0" layoutY="210.0" prefHeight="22.0" prefWidth="579.0" text="Once you've selected an option relevant to you, please click Next to see the generated tree.">
+         <font>
+            <Font name="Arial Bold" size="13.0" />
+         </font>
+      </Label>
    </children>
 </AnchorPane>

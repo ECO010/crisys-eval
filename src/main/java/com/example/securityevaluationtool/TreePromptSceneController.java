@@ -1,6 +1,8 @@
 package com.example.securityevaluationtool;
 
 import com.example.securityevaluationtool.database.*;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -8,370 +10,187 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
-import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.TreeItem;
-import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
+
+/**
+ * Explain Attack Trees and this tree generation briefly (tree generation, CWE -> CAPEC -> Mitigations),
+ * Explain that it uses CISA ICS Advisory which goes back to 2010
+ * Require them to select a filter for the timeframe (years) and then proceed to generate the tree
+ * Need EvalId passed across, need way to fetch all assets linked to this evalId, need a way to get all distinct cweIds for each asset based on Asset Type
+ * generate tree by fetching:
+ * system name for current evalId (root node) -> all assets linked to the evalId -> all distinct CweId's linked to the assets -> all CapecIds linked to the CweId's
+ * Navigate to Tree View Screen
+ */
 
 public class TreePromptSceneController {
 
-    private static final String GET_ATTACK_IMPACTS = "SELECT DISTINCT Impact FROM AttackImpact";
-    private static final String GET_ATTACK_SCOPES = "SELECT DISTINCT Scope FROM AttackScope";
     public final String SCENE_TITLE = "Tree Prompt Scene";
+    List<String> yearOptionsList = new ArrayList<>(Arrays.asList("This Year", "Last Year", "Last 5 Years", "All Time"));
 
     @FXML
-    private VBox attackImpactBox;
+    private ComboBox<String> comboBox;
 
-    @FXML
-    private VBox attackScopeBox;
+    private String selectedOption;
+    private int yearTo;
+    private int yearFrom;
+    private String assetType;
+    private String assetName;
 
-    List<CheckBox> impactCheckBoxList = new ArrayList<>();
-    List<CheckBox> scopeCheckBoxList = new ArrayList<>();
+    // DAO Objects
+    private final ICSAssetVulnerabilityDAO icsAssetVulnerabilityDAO = new ICSAssetVulnerabilityDAO();
+    private final AttackPatternDAO attackPatternDAO = new AttackPatternDAO();
 
-    private LandingSceneController previousController;
-
-    public void setPreviousController(LandingSceneController previousController) {
-        this.previousController = previousController;
+    // Field(s) and method(s) for getting data from previous controller
+    private Evaluation currentEvaluation;
+    private List<EvaluationAsset> retrievedEvaluationAssets;
+    public void getCurrentEvaluation(Evaluation currentEvaluation) {
+        this.currentEvaluation = currentEvaluation;
+    }
+    public void getEvaluationAssets(List<EvaluationAsset> retrievedEvaluationAssets) {
+        this.retrievedEvaluationAssets = retrievedEvaluationAssets;
     }
 
-    /**
-     * Populate Impact checkboxes on button click
-     */
     @FXML
-    private void onAttackImpactClick() {
+    private void initialize() {
+        ObservableList<String> observableList = FXCollections.observableList(yearOptionsList);
+        comboBox.setItems(observableList);
+    }
 
-        attackImpactBox.getChildren().clear();
-        for (String option : fetchImpactDataFromDb()) {
-            CheckBox checkBox = new CheckBox(option);
-            attackImpactBox.getChildren().add(checkBox);
-            impactCheckBoxList.add(checkBox);
+    @FXML
+    private void onComboClick() {
+        selectedOption = comboBox.getValue();
+        System.out.println("Combo box selected value: " + selectedOption);
+
+        if (Objects.equals(selectedOption, yearOptionsList.get(0))) {
+            yearFrom = Calendar.getInstance().get(Calendar.YEAR);
+            yearTo = Calendar.getInstance().get(Calendar.YEAR);
+            System.out.println(yearFrom);
+            System.out.println(yearTo);
         }
-        attackImpactBox.setVisible(true);
-    }
-
-    /**
-     * Populate Scope checkboxes on button click
-     */
-    @FXML
-    private void onAttackScopeClick() {
-
-        attackScopeBox.getChildren().clear();
-        for (String option : fetchScopeDataFromDb()) {
-            CheckBox checkBox = new CheckBox(option);
-            attackScopeBox.getChildren().add(checkBox);
-            scopeCheckBoxList.add(checkBox);
+        else if (Objects.equals(selectedOption, yearOptionsList.get(1))) {
+            yearFrom = Calendar.getInstance().get(Calendar.YEAR) - 1;
+            yearTo = Calendar.getInstance().get(Calendar.YEAR) - 1;
+            System.out.println(yearFrom);
+            System.out.println(yearTo);
         }
-        attackScopeBox.setVisible(true);
-    }
-
-    /**
-     * The main logic which gets the list of capec id's which would be used to generate attack trees
-     */
-    private void generateAttackTree(int rootCapecId, TreeItem<AttackPattern> parentNode) {
-        RelatedAttackDAO relatedAttackDAO = new RelatedAttackDAO();
-
-        List<AttackPattern> relatedAttacks = relatedAttackDAO.fetchRelatedAttacks(rootCapecId);
-        System.out.println(relatedAttacks.size());
-
-        // For each related attack, create a TreeItem and add it as a child of the parent node
-        for (AttackPattern relatedAttack : relatedAttacks) {
-            TreeItem<AttackPattern> childNode = new TreeItem<>(relatedAttack);
-            parentNode.getChildren().add(childNode);
-
-            // Print the contents of the current node for testing
-            System.out.println("Node CapecId: " + relatedAttack.getCapecId());
-            System.out.println("Node Attack Pattern Name: " + relatedAttack.getName());
-
-            // Recursively construct the tree for the child attack
-            generateAttackTree(relatedAttack.getCapecId(), childNode);
+        else if (Objects.equals(selectedOption, yearOptionsList.get(2))) {
+            yearFrom = Calendar.getInstance().get(Calendar.YEAR) - 4;
+            yearTo = Calendar.getInstance().get(Calendar.YEAR);
+            System.out.println(yearFrom);
+            System.out.println(yearTo);
+        }
+        else if (Objects.equals(selectedOption, yearOptionsList.get(3))) {
+            yearFrom = icsAssetVulnerabilityDAO.getMinYearFromDB();
+            yearTo = Calendar.getInstance().get(Calendar.YEAR);
+            System.out.println(yearFrom);
+            System.out.println(yearTo);
         }
     }
 
-    /**
-     * Display the tree on a new scene as a TreeView
-     */
+    // Root Node: The current evaluation (Display the criticalSystem Name) -> Object Evaluation
+    // Immediate children: All assets linked to the evaluation (display will be asset name) -> Object EvaluationAsset
+    // Children of immediate children: for each asset, the linked CWEs Object CWE (display will be CWE-ID) -> Object CWE
+    // Children of children: for each CWE, get the related attack patterns (display will be the name of attack Pattern and CAPEC-ID) -> Object AttackPattern
+    private TreeItem<String> generateAttackTree() {
+        // Root of the tree, the evaluated system name. Is hidden on the tree view
+        TreeItem<String> rootItem = new TreeItem<>(currentEvaluation.getCriticalSystemName());
+
+        // Go through evaluation assets passed from previous scene and get the asset type and the asset name
+        for (EvaluationAsset evaluationAsset : retrievedEvaluationAssets) {
+            assetType = evaluationAsset.getAssetType();
+            assetName = evaluationAsset.getAssetName();
+
+            // Set the asset name as the tree item and add it to the root
+            TreeItem<String> assetItem = new TreeItem<>(assetName);
+            rootItem.getChildren().add(assetItem);
+
+            // Get distinct CWE's related to the asset type and users year selection
+            List<String> fetchedCWEs = icsAssetVulnerabilityDAO.getDistinctCweIdsBasedOnYearAndAssetType(assetType, yearFrom, yearTo);
+
+            // use distinct CWE strings to fetch list of CWE Objects
+            List<CommonWeaknessEnumeration> assetWeaknesses = icsAssetVulnerabilityDAO.getCweFromStrings(fetchedCWEs);
+
+            // Go through each weakness and add it as a child to the assetItem if there is a CWE linked
+            if (!assetWeaknesses.isEmpty()) {
+
+                // To string method displays CweId alone (could change it up later)
+                for (CommonWeaknessEnumeration weaknessEnumeration: assetWeaknesses) {
+                    TreeItem<String> cweItem = new TreeItem<>(weaknessEnumeration.toString());
+                    assetItem.getChildren().add(cweItem);
+
+                    // Get the list of CapecIds from the CWE Item
+                    List<Integer> relatedCapecIds = attackPatternDAO.getCapecIdsFromCwe(weaknessEnumeration.getCweId());
+
+                    // Get list of attack pattern objects from capec Ids
+                    List<AttackPattern> relatedAttackPatterns = attackPatternDAO.getAttackPatternsFromIds(relatedCapecIds);
+
+                    // Loop through list of related attack patterns and add each one as a child to the relevant cwe Item if it isn't empty
+                    if (!relatedAttackPatterns.isEmpty()) {
+                        for (AttackPattern attackPattern : relatedAttackPatterns) {
+                            TreeItem<String> attackPatternItem = new TreeItem<>(attackPattern.toString());
+                            cweItem.getChildren().add(attackPatternItem);
+                        }
+                    }
+                }
+            }
+        }
+        return rootItem;
+    }
+
+    //Just checking that I'm getting data atm
     @FXML
     private void onNextClick(ActionEvent event) {
-
-        // Random CapecId should be selected from the list of CapecId's
-        int randomCapecId = 0;
-        List <Integer> capecIds = new ArrayList<>();
-
-        // Construct the SQL query based on the selected checkboxes
-        StringBuilder impactQueryBuilder = new StringBuilder("SELECT DISTINCT AttackPattern.CapecID\n" +
-                "FROM AttackPattern\n" +
-                "INNER JOIN AttackImpact ON AttackPattern.CapecID = AttackImpact.CapecID\n" +
-                "WHERE AttackPattern.IsICSRelated = 1\n" +
-                "AND AttackImpact.Impact IN ");
-
-        StringBuilder scopeQueryBuilder = new StringBuilder("SELECT DISTINCT AttackPattern.CapecID\n" +
-                "FROM AttackPattern\n" +
-                "INNER JOIN AttackScope ON AttackPattern.CapecID = AttackScope.CapecID\n" +
-                "WHERE AttackPattern.IsICSRelated = 1\n" +
-                "AND AttackScope.Scope IN ");
-
-        List<String> impactSelectedOptions = new ArrayList<>();
-        List<String> scopeSelectedOptions = new ArrayList<>();
-
-        boolean isAnyScopeSelected = false;
-        boolean isAnyImpactSelected = false;
-
-        // Handle Scope Selection
-        // Check if any scope checkbox is selected
-        for (CheckBox scopeCheckBox : scopeCheckBoxList) {
-            if (scopeCheckBox.isSelected()) {
-                isAnyScopeSelected = true;
-                scopeSelectedOptions.add("'" + scopeCheckBox.getText() + "'");
-            }
-        }
-
-        // Handle Impact Selection
-        // Check if any impact checkbox is selected
-        for (CheckBox impactCheckBox : impactCheckBoxList) {
-            if (impactCheckBox.isSelected()) {
-                isAnyImpactSelected = true;
-                impactSelectedOptions.add("'" + impactCheckBox.getText() + "'");
-            }
-        }
-
-        // Check only Scope is Selected
-        if (isAnyScopeSelected && !isAnyImpactSelected) {
-            // If there's only one selected option
-            if (scopeSelectedOptions.size() == 1) {
-                scopeQueryBuilder.append("(").append(scopeSelectedOptions.get(0)).append(")");
-            } else {
-                // If there are multiple selected options
-                scopeQueryBuilder.append("(")
-                        .append(String.join(", ", scopeSelectedOptions))
-                        .append(")");
-            }
-
-            // Testing the right query is being used
-            System.out.println(scopeQueryBuilder);
-
-            // Execute the SQL query and process the results
-            try (Connection connection = DatabaseConnector.connect();
-                 PreparedStatement statement = connection.prepareStatement(scopeQueryBuilder.toString());
-                 ResultSet resultSet = statement.executeQuery()) {
-
-                // Process the resultSet
-                while (resultSet.next()) {
-                    // Retrieve data from the resultSet and add it to a list of id's
-                    int capecId = resultSet.getInt("CapecID");
-                    capecIds.add(capecId);
-                }
-                // select random id
-                randomCapecId = capecIds.get(new Random().nextInt(capecIds.size()));
-
-                // Testing selected id
-                System.out.println(randomCapecId);
-
-            } catch (SQLException e) {
-                e.printStackTrace();
-                // Handle exceptions
-            }
-        }
-
-        // Check only Impact is Selected
-        if (isAnyImpactSelected && !isAnyScopeSelected) {
-            // If there's only one selected option
-            if (impactSelectedOptions.size() == 1) {
-                impactQueryBuilder.append("(").append(impactSelectedOptions.get(0)).append(")");
-            } else {
-                // If there are multiple selected options
-                impactQueryBuilder.append("(")
-                        .append(String.join(", ", impactSelectedOptions))
-                        .append(")");
-            }
-
-            // testing the query being used
-            System.out.println(impactQueryBuilder);
-
-            // Execute the SQL query and process the results
-            try (Connection connection = DatabaseConnector.connect();
-                 PreparedStatement statement = connection.prepareStatement(impactQueryBuilder.toString());
-                 ResultSet resultSet = statement.executeQuery()) {
-
-                // Process the resultSet
-                while (resultSet.next()) {
-                    // Retrieve data from the resultSet and add it to a list of capec id's
-                    int capecId = resultSet.getInt("CapecID");
-                    capecIds.add(capecId);
-                }
-
-                // select random capec id
-                randomCapecId = capecIds.get(new Random().nextInt(capecIds.size()));
-
-                // Testing selected id
-                System.out.println(randomCapecId);
-            } catch (SQLException e) {
-                e.printStackTrace();
-                // Handle exceptions
-            }
-        }
-
-        // Both are selected, error and make sure the right input is gotten before generating the tree.
-        if (isAnyImpactSelected && isAnyScopeSelected) {
+        // check if selected option has a value, if not error
+        if (selectedOption == null) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error");
-            alert.setHeaderText("Selection Error");
-            alert.setContentText("Please select either Impact or Scope, not both.");
+            alert.setHeaderText(null);
+            alert.setContentText("Please select a timeframe to filter by");
             alert.showAndWait();
-            return; //Prevent navigation
         }
+        // An option is selected, generate attack tree and display it on the tree view scene
+        else {
+            System.out.println("Critical System Name: " + currentEvaluation.getCriticalSystemName());
 
-        // No filter selected, use a random ID from all ICS Attack patterns
-        if (!isAnyScopeSelected && !isAnyImpactSelected) {
-            AttackPatternDAO attackPatternDAO = new AttackPatternDAO();
-            capecIds = attackPatternDAO.getAllIcsCapecIds();
-            randomCapecId = capecIds.get(new Random().nextInt(capecIds.size()));
+            // Generate attack tree and get root node
+            TreeItem<String> rootNode = generateAttackTree();
 
-            // Testing selected id
-            System.out.println(randomCapecId);
-        }
+            // Navigate to TreeView Scene and display tree
+            try {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("tree-view-scene.fxml"));
+                Parent root = loader.load();
 
-        // Set RandomId fetched as root
-        int rootCapecId = randomCapecId;
+                // Get the controller of the tree view scene
+                TreeViewSceneController treeViewSceneController = loader.getController();
 
-        // Create instances of the DAOs needed
-        AttackPatternDAO attackPatternDAO = new AttackPatternDAO();
-        TaxonomyMappingDAO taxonomyMappingDAO = new TaxonomyMappingDAO();
-        MitigationDAO mitigationDAO = new MitigationDAO();
+                // Send data to the tree view controller, we are using this to fetch linked CVE's according to the users date filter.
+                treeViewSceneController.getYearFrom(yearFrom);
+                treeViewSceneController.getYearTo(yearTo);
+                //treeViewSceneController.getAssetType(assetType);
+                //treeViewSceneController.getAssetName(assetName);
+                treeViewSceneController.getCurrentEvaluation(currentEvaluation);
+                treeViewSceneController.getEvaluationAssets(retrievedEvaluationAssets);
 
-        // Create a TreeItem for the root node
-        AttackPattern rootAttack = new AttackPattern();
+                // Pass the root node of the tree to the controller
+                treeViewSceneController.setRootNode(rootNode);
 
-        // set root attack details
-        rootAttack.setCapecId(rootCapecId);
-        rootAttack.setName(attackPatternDAO.getAttackNameFromDB(rootCapecId));
-        rootAttack.setSeverity(attackPatternDAO.getAttackSeverityFromDB(rootCapecId));
-        rootAttack.setLikelihood(attackPatternDAO.getAttackLikelihoodFromDB(rootCapecId));
-        rootAttack.setDescription(attackPatternDAO.getAttackDescriptionFromDB(rootCapecId).trim()); // trimming description because it shows up weird in the DB
+                Stage stage = new Stage();
+                stage.setScene(new Scene(root));
+                stage.setTitle(treeViewSceneController.SCENE_TITLE);
+                stage.show();
 
-        List<TaxonomyMapping> taxonomyMappings = taxonomyMappingDAO.getTaxonomyMappingsForAttack(rootCapecId);
-        rootAttack.setTaxonomyMappings(taxonomyMappings);
-
-        List<Mitigation> mitigations = mitigationDAO.getMitigationsForAttack(rootCapecId);
-        rootAttack.setMitigations(mitigations);
-
-        //TreeItem<AttackPattern> rootNode = new TreeItem<>(rootAttack);
-        TreeItem<AttackPattern> rootNode = CustomTreeItemFactory.createTreeItem(rootAttack);
-
-        // Generate the attack tree recursively starting from the root node
-        generateAttackTree(rootCapecId, rootNode);
-
-        // Navigate to the Tree View Scene
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("tree-view-scene.fxml"));
-            Parent root = loader.load();
-
-            /*TreePromptSceneController controller = loader.getController();
-            controller.setPreviousController(this);*/
-
-            // Get the controller of the tree view scene
-            TreeViewSceneController treeViewSceneController = loader.getController();
-
-            // Pass the root node of the tree to the controller
-            treeViewSceneController.setRootNode(rootNode);
-
-            Stage stage = new Stage();
-            stage.setScene(new Scene(root));
-            stage.setTitle(treeViewSceneController.SCENE_TITLE);
-            stage.show();
-
-            // Close the current scene if needed
-            Stage currentStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            currentStage.close(); // Close instead of hide
-        } catch (IOException e) {
-            e.printStackTrace();
-            // Handle loading error
-        }
-    }
-
-    @FXML
-    private void onBackClick(ActionEvent event) {
-        try {
-            // Load the FXML file of the landing scene
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("landing-scene.fxml"));
-            Parent root = loader.load();
-
-            // Get the controller of the landing scene
-            LandingSceneController landingSceneController = loader.getController();
-
-            // Set the landing scene controller as the previous controller
-            // This allows for communication between scenes if needed
-            // landingSceneController.setPreviousController(this);
-
-            // Get the current stage from the event source
-            Stage currentStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-
-            // Set the scene of the current stage to the landing scene
-            currentStage.setScene(new Scene(root));
-            currentStage.setTitle(landingSceneController.SCENE_TITLE);
-
-            // Show the stage if it's not already showing
-            if (!currentStage.isShowing()) {
-                currentStage.show();
+                // Close the current scene if needed
+                Stage currentStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+                currentStage.close(); // Close instead of hide
+            } catch (IOException e) {
+                e.printStackTrace();
+                // Handle loading error
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-            // Handle loading error
         }
-    }
-
-
-    /**
-     * Fetch Impact Options from the DB
-     * @return impactOptions
-     */
-    private List<String> fetchImpactDataFromDb() {
-        List<String> impactOptions = new ArrayList<>();
-
-        try (Connection connection = DatabaseConnector.connect();
-             PreparedStatement preparedStatement = connection.prepareStatement(GET_ATTACK_IMPACTS);
-             ResultSet resultSet = preparedStatement.executeQuery()) {
-
-            // Iterate over the result set and populate the impactOptions list
-            while (resultSet.next()) {
-                String impact = resultSet.getString("Impact");
-                impactOptions.add(impact);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            // Handle exceptions as needed
-        }
-        return impactOptions;
-    }
-
-    /**
-     * Fetch Scope Options from the DB
-     * @return scopeOptions
-     */
-    private List<String> fetchScopeDataFromDb() {
-        List<String> scopeOptions = new ArrayList<>();
-
-        try (Connection connection = DatabaseConnector.connect();
-             PreparedStatement preparedStatement = connection.prepareStatement(GET_ATTACK_SCOPES);
-             ResultSet resultSet = preparedStatement.executeQuery()) {
-
-            // Iterate over the result set and populate the scopeOptions list
-            while (resultSet.next()) {
-                String scope = resultSet.getString("Scope");
-                scopeOptions.add(scope);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            // Handle exceptions as needed
-        }
-        return scopeOptions;
     }
 }

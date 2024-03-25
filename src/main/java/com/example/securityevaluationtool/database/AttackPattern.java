@@ -566,8 +566,46 @@ public class AttackPattern {
         }
     }
 
+
+    // Method to parse a string representation and create an AttackPattern object
+    public static AttackPattern fromStringToAttackPattern(String attackPatternString) {
+        AttackPattern attackPattern = new AttackPattern();
+        AttackPatternDAO attackPatternDAO = new AttackPatternDAO();
+        MitigationDAO mitigationDAO = new MitigationDAO();
+        TaxonomyMappingDAO taxonomyMappingDAO = new TaxonomyMappingDAO();
+
+        String[] parts = attackPatternString.split(": ", 2);
+        if (parts.length != 2) {
+            // Invalid format, return null or throw an exception
+            return null;
+        }
+
+        // Extract CAPEC ID from the first part of the string
+        int capecId;
+        try {
+            capecId = Integer.parseInt(parts[0].substring(parts[0].indexOf('-') + 1));
+        } catch (NumberFormatException e) {
+            // Invalid CAPEC ID format, return null or throw an exception
+            return null;
+        }
+
+        // Extract name from the second part of the string
+        String name = parts[1];
+
+        attackPattern.setCapecId(capecId);
+        attackPattern.setName(name);
+        attackPattern.setDescription(attackPatternDAO.getAttackDescriptionFromDB(capecId));
+        attackPattern.setLikelihood(attackPatternDAO.getAttackLikelihoodFromDB(capecId));
+        attackPattern.setSeverity(attackPatternDAO.getAttackSeverityFromDB(capecId));
+        attackPattern.setMitigations(mitigationDAO.getMitigationsForAttack(capecId));
+        attackPattern.setTaxonomyMappings(taxonomyMappingDAO.getTaxonomyMappingsForAttack(capecId));
+
+        // Create and return AttackPattern object
+        return attackPattern;
+    }
+
     @Override
     public String toString() {
-        return name + " (" + capecId + ")";
+        return "CAPEC-"+capecId + ": " + name;
     }
 }

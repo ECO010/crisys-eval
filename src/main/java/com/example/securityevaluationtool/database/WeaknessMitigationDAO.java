@@ -7,17 +7,17 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MitigationDAO {
-    private static final String INSERT_MITIGATIONS = "INSERT INTO AttackMitigation (mitigationDescription, capecId) VALUES (?, ?)";
-    private static final String GET_MITIGATIONS_FOR_ATTACK = "SELECT mitigationDescription FROM AttackMitigation WHERE CapecId = ?";
+public class WeaknessMitigationDAO {
+    private static final String INSERT_MITIGATIONS = "INSERT INTO WeaknessMitigation (mitigationDescription, cweId) VALUES (?, ?)";
+    private static final String GET_MITIGATIONS_FOR_WEAKNESS = "SELECT mitigationDescription FROM WeaknessMitigation WHERE CweId = ?";
 
-    public void saveMitigations (List<Mitigation> mitigations) {
+    public void saveMitigations (List<WeaknessMitigation> mitigations) {
         try (Connection connection = DatabaseConnector.connect();
              PreparedStatement preparedStatement = connection.prepareStatement(INSERT_MITIGATIONS)) {
 
-            for (Mitigation mitigation : mitigations) {
+            for (WeaknessMitigation mitigation : mitigations) {
                 preparedStatement.setString(1, mitigation.getMitigationDescription());
-                preparedStatement.setInt(2, mitigation.getCapecId());
+                preparedStatement.setString(2, mitigation.getCweId());
                 preparedStatement.addBatch();
             }
             preparedStatement.executeBatch();
@@ -27,13 +27,13 @@ public class MitigationDAO {
         }
     }
 
-    public List<Mitigation> getMitigationsForAttack(int capecId) {
-        List<Mitigation> mitigations = new ArrayList<>();
+    public List<WeaknessMitigation> getMitigationsForWeakness(String cweId) {
+        List<WeaknessMitigation> mitigations = new ArrayList<>();
 
         try (Connection connection = DatabaseConnector.connect();
-             PreparedStatement preparedStatement = connection.prepareStatement(GET_MITIGATIONS_FOR_ATTACK)) {
+             PreparedStatement preparedStatement = connection.prepareStatement(GET_MITIGATIONS_FOR_WEAKNESS)) {
 
-            preparedStatement.setInt(1, capecId);
+            preparedStatement.setString(1, cweId);
 
             ResultSet resultSet = preparedStatement.executeQuery();
 
@@ -42,8 +42,8 @@ public class MitigationDAO {
                 String mitigationDescription = resultSet.getString("mitigationDescription");
 
                 // Create an object and add it to the list
-                Mitigation mitigation = new Mitigation();
-                mitigation.setCapecId(capecId);
+                WeaknessMitigation mitigation = new WeaknessMitigation();
+                mitigation.setCweId(cweId);
                 mitigation.setMitigationDescription(mitigationDescription);
                 mitigations.add(mitigation);
             }
