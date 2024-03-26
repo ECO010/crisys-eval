@@ -66,24 +66,28 @@ public class TreePromptSceneController {
         selectedOption = comboBox.getValue();
         System.out.println("Combo box selected value: " + selectedOption);
 
+        // This Year selected
         if (Objects.equals(selectedOption, yearOptionsList.get(0))) {
             yearFrom = Calendar.getInstance().get(Calendar.YEAR);
             yearTo = Calendar.getInstance().get(Calendar.YEAR);
             System.out.println(yearFrom);
             System.out.println(yearTo);
         }
+        // Last Year selected
         else if (Objects.equals(selectedOption, yearOptionsList.get(1))) {
             yearFrom = Calendar.getInstance().get(Calendar.YEAR) - 1;
-            yearTo = Calendar.getInstance().get(Calendar.YEAR) - 1;
+            yearTo = Calendar.getInstance().get(Calendar.YEAR);
             System.out.println(yearFrom);
             System.out.println(yearTo);
         }
+        // Last 5 Years selected
         else if (Objects.equals(selectedOption, yearOptionsList.get(2))) {
             yearFrom = Calendar.getInstance().get(Calendar.YEAR) - 4;
             yearTo = Calendar.getInstance().get(Calendar.YEAR);
             System.out.println(yearFrom);
             System.out.println(yearTo);
         }
+        // All time selected
         else if (Objects.equals(selectedOption, yearOptionsList.get(3))) {
             yearFrom = icsAssetVulnerabilityDAO.getMinYearFromDB();
             yearTo = Calendar.getInstance().get(Calendar.YEAR);
@@ -176,7 +180,7 @@ public class TreePromptSceneController {
                 treeViewSceneController.getCurrentEvaluation(currentEvaluation);
                 treeViewSceneController.getEvaluationAssets(retrievedEvaluationAssets);
 
-                // Pass the root node of the tree to the controller
+                // Pass the root node of the tree to the tree view controller
                 treeViewSceneController.setRootNode(rootNode);
 
                 Stage stage = new Stage();

@@ -143,6 +143,10 @@ public class TreeViewSceneController {
 
             // Printing out values to test
             System.out.println(selectedAttackPattern);
+            System.out.println(yearFrom);
+            System.out.println(yearTo);
+            System.out.println(currentEvaluation.getCriticalSystemName());
+            System.out.println(retrievedEvaluationAssets.size());
             System.out.println(selectedAttackPattern.getCapecId());
             System.out.println(selectedAttackPattern.getName());
             System.out.println(selectedAttackPattern.getDescription());
@@ -218,6 +222,10 @@ public class TreeViewSceneController {
 
             // Printing out values to test
             System.out.println(selectedWeakness);
+            System.out.println(yearFrom);
+            System.out.println(yearTo);
+            System.out.println(currentEvaluation.getCriticalSystemName());
+            System.out.println(retrievedEvaluationAssets.size());
             System.out.println(assetType);
             System.out.println(selectedWeakness.getCweId());
             System.out.println(selectedWeakness.getName());
@@ -242,7 +250,7 @@ public class TreeViewSceneController {
                         selectedWeakness.getDescription().trim(), // trimming description because it shows up weird in the DB
                         (selectedWeakness.getLikelihoodOfExploit() != null && !selectedWeakness.getLikelihoodOfExploit().isEmpty()) ? selectedWeakness.getLikelihoodOfExploit() : "Undetermined Likelihood",
                         linkedCVEs,
-                        !weaknessMitigations.isEmpty() ? mitigationsDisplay.trim() : "This Attack Pattern does not have any recorded Mitigations"); // trimming description because it shows up weird in the DB
+                        !weaknessMitigations.isEmpty() ? mitigationsDisplay.trim() : "This Weakness does not have any recommended Mitigations"); // trimming description because it shows up weird in the DB
 
                 Stage stage = new Stage();
                 stage.setScene(new Scene(root));
@@ -266,15 +274,24 @@ public class TreeViewSceneController {
     // Options: Extremely Prepared, Somewhat Prepared, Neither Prepared Nor Unprepared, Somewhat Unprepared, Extremely Unprepared (Make them an Enum and factor them into score calculation)
     @FXML
     private void onContinueEvaluation(/*ActionEvent event*/) {
-        // close attack cards
+        // close attack and weakness cards
         closeAllAttackCards();
+        closeAllWeaknessCards();
+        System.out.println(currentEvaluation.getCriticalSystemName());
+        System.out.println(retrievedEvaluationAssets.size());
+        System.out.println(retrievedEvaluationAssets.get(0).getAssetName());
 
         // Navigate to the Tree Prompt Screen
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("preparedness-window.fxml"));
             Parent root = loader.load();
-
             PreparednessWindowController preparednessWindowController = loader.getController();
+
+            // Pass data unto next scene
+            preparednessWindowController.getCurrentEvaluation(currentEvaluation);
+            preparednessWindowController.getEvaluationAssets(retrievedEvaluationAssets);
+            preparednessWindowController.getGeneratedTree(attackTreeView);
+            preparednessWindowController.initializeWithData();
 
             Stage stage = new Stage();
             stage.setScene(new Scene(root));
@@ -285,7 +302,6 @@ public class TreeViewSceneController {
             e.printStackTrace();
             // Handle loading error
         }
-        //System.out.println("TODO");
     }
 
     private void closeAllAttackCards() {
@@ -303,6 +319,29 @@ public class TreeViewSceneController {
             if (window instanceof Stage) {
                 Stage stage = (Stage) window;
                 if (stage.getTitle().equals(attackNodeCardController.SCENE_TITLE)) {
+                    cardViewStages.add(stage);
+                }
+            }
+        }
+        // Close All CardView Stages
+        closeAllWindows(cardViewStages);
+    }
+
+    private void closeAllWeaknessCards() {
+        // Get a list of all open windows
+        List<Window> openWindows = Window.getWindows();
+
+        // List of Card windows
+        List<Stage> cardViewStages = new ArrayList<>();
+
+        // Get the controller of the Evaluation End
+        WeaknessNodeCardController weaknessNodeCardController = new WeaknessNodeCardController();
+
+        // Iterate through the open windows and close all open windows
+        for (Window window : openWindows) {
+            if (window instanceof Stage) {
+                Stage stage = (Stage) window;
+                if (stage.getTitle().equals(weaknessNodeCardController.SCENE_TITLE)) {
                     cardViewStages.add(stage);
                 }
             }

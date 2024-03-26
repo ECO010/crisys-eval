@@ -554,13 +554,13 @@ public class AttackPattern {
      * @param args
      */
     public static void main(String[] args) {
-        //AttackPatternDAO attackPatternDAO = new AttackPatternDAO();
+        AttackPatternDAO attackPatternDAO = new AttackPatternDAO();
         AttackPattern attackPattern = new AttackPattern();
 
         // Assume you have a list of AttackPattern objects obtained from XML parsing
         List<AttackPattern> attackPatterns = attackPattern.parseXMLDataFromCAPEC();
         CommonWeaknessEnumerationDAO commonWeaknessEnumerationDAO = new CommonWeaknessEnumerationDAO();
-        //attackPatternDAO.saveAttackPatterns(attackPatterns);
+        attackPatternDAO.saveAttackPatterns(attackPatterns);
         for (AttackPattern pattern : attackPatterns) {
             commonWeaknessEnumerationDAO.saveRelatedWeaknesses(pattern.getRelatedWeaknesses());
         }
