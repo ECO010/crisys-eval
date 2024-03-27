@@ -13,6 +13,7 @@ public class CommonWeaknessEnumerationDAO {
     private static final String GET_WEAKNESS_LIKELIHOOD = "SELECT LikelihoodOfExploit FROM CommonWeaknessEnumeration WHERE CweId = ?";
 
     // Weird concatenation syntax because of SQLite
+    // Making sure the like fetches exact match (i.e CWE-100, and not CWE-100x..)
     private static final String GET_LINKED_CVEs =  "SELECT CVENumber\n" +
                                                     "FROM ICSAssetVulnerability\n" +
                                                     "WHERE ', ' || CWENumber || ',' LIKE '%' || ? || '%'\n" +

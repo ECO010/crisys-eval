@@ -146,7 +146,7 @@ public class TreePromptSceneController {
         return rootItem;
     }
 
-    //Just checking that I'm getting data atm
+    // Just checking that I'm getting data atm
     @FXML
     private void onNextClick(ActionEvent event) {
         // check if selected option has a value, if not error

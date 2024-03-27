@@ -198,9 +198,8 @@ public class CommonWeaknessEnumeration {
         cwe.setDescription(commonWeaknessEnumerationDAO.getWeaknessDescriptionFromDB(cweId));
         cwe.setLikelihoodOfExploit(commonWeaknessEnumerationDAO.getWeaknessLikelihoodFromDB(cweId));
         cwe.setWeaknessMitigations(weaknessMitigationDAO.getMitigationsForWeakness(cweId));
-        // Get CVE Links
 
-        // Create and return AttackPattern object
+        // Create and return CWE object
         return cwe;
     }
 

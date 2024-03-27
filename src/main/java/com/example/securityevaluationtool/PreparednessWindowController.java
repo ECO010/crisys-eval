@@ -1,9 +1,6 @@
 package com.example.securityevaluationtool;
 
-import com.example.securityevaluationtool.database.AttackPattern;
-import com.example.securityevaluationtool.database.CommonWeaknessEnumeration;
-import com.example.securityevaluationtool.database.Evaluation;
-import com.example.securityevaluationtool.database.EvaluationAsset;
+import com.example.securityevaluationtool.database.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -40,6 +37,8 @@ public class PreparednessWindowController {
     @FXML
     private Button continueBtn;
 
+    EvaluationDAO evaluationDAO = new EvaluationDAO();
+
     private String selectedOption;
 
     List<String> secureOptionsList = new ArrayList<>(Arrays.asList("Not Secure", "Slightly Secure", "Moderately Secure", "Secure", "Very Secure"));
@@ -48,6 +47,16 @@ public class PreparednessWindowController {
     private Evaluation currentEvaluation;
     private List<EvaluationAsset> retrievedEvaluationAssets;
     private TreeView<String> attackTreeView;
+    private int yearTo;
+    private int yearFrom;
+
+    public void getYearTo(int yearTo) {
+        this.yearTo = yearTo;
+    }
+
+    public void getYearFrom(int yearFrom) {
+        this.yearFrom = yearFrom;
+    }
 
     public void getCurrentEvaluation(Evaluation currentEvaluation) {
         this.currentEvaluation = currentEvaluation;
@@ -62,7 +71,8 @@ public class PreparednessWindowController {
     }
 
     // track current asset
-    private int currentAssetIndex = 0;
+    private int currentAssetIndex;
+    private int currentAssetSafetyScore;
 
     @FXML
     private void initialize() {
@@ -72,6 +82,8 @@ public class PreparednessWindowController {
 
     // Call this method after setting the necessary data
     public void initializeWithData() {
+        currentAssetSafetyScore = 0;
+        currentAssetIndex = 0;
         // Initialize UI with information about the first retrieved asset
         updateAssetInfo();
     }
@@ -128,6 +140,7 @@ public class PreparednessWindowController {
         return numMitigations; // Placeholder
     }
 
+    // Should just move window behind tree view not really close
     @FXML
     private void onBackClick() {
         // Close the current scene
@@ -196,56 +209,129 @@ public class PreparednessWindowController {
 
     // Total Asset Safety Score Out of Hundred
     // Split into 4 categories:
-    // Survey Answer (out of 20)
-    // Average CVSS Scores (out of 30)
-    // Total number of mitigations (out of 30)
-    // Weakness Likelihood of Exploit (out of 20)
+    // Survey Answer (out of 25)
+    // Average CVSS Scores (out of 25)
+    // Total number of attack patterns linked to the asset (out of 25)
+    // Weakness Likelihood of Exploit (out of 25)***
+    // EPSS score linked to CVE's linked to CWE (the score representing the probability [0-1] of exploitation in the wild in the next 30 days (following score publication)) ??
     private void calculateAssetSafetyScore(String currentAssetName, int evaluationId) {
-        int assetScore = 0;
-        // NOT SECURE (out of 20)
+        TreeItem<String> assetNode = attackTreeView.getRoot().getChildren().get(currentAssetIndex);
+        // Get the list of CWEs under the asset node
+        List<TreeItem<String>> cweNodes = assetNode.getChildren();
+
+        if (!cweNodes.isEmpty()) {
+            int numOfLinkedAttackPatterns = 0;
+            Double averageCVSSTotal = 0.0;
+
+            // Loop through each CWE node
+            for (TreeItem<String> cweNode : cweNodes) {
+
+                // Get the list of Attack Patterns (CAPECs) under the CWE node
+                List<TreeItem<String>> capecNodes = cweNode.getChildren();
+                numOfLinkedAttackPatterns += capecNodes.size();
+
+                // Go through CWE, get the score, the total score / number of CWEs to get the score for this section
+                // Get the name of the weakness
+                // access the CWE node and count the mitigations by retrieving the CWE object associated with the node
+                String cweDisplayName = cweNode.getValue();
+                CommonWeaknessEnumeration cwe = CommonWeaknessEnumeration.fromStringToCWE(cweDisplayName);
+                String cweId = cwe.getCweId();
+
+                // Initialize DAO to query the DB
+                ICSAssetVulnerabilityDAO icsAssetVulnerabilityDAO = new ICSAssetVulnerabilityDAO();
+                // get the average cvss score for each cwe and add them
+                averageCVSSTotal += icsAssetVulnerabilityDAO.getAverageCVSSForCWE(cweId, yearFrom, yearTo);
+            }
+            // divide the total of the averages by the number of cwes
+            Double finalCVSSAverageForAsset = averageCVSSTotal / cweNodes.size();
+            // 3rd Category: Average CVSS v3.x specifications score rating (for each CWE linked to the Asset) (out of 30):
+            // Critical: 9.0 - 10, asset score: +5
+            // High: 7.0 - 8.9, asset score: +10
+            // Medium: 4.0 - 6.9, asset score: +15
+            // Low: 0.1 - 3.9, asset score: +20
+            // None: 0.0, asset score: +25
+            // update security safety score based on the criteria
+            if (finalCVSSAverageForAsset == 0.0) {
+                currentAssetSafetyScore += 25;
+            }
+            else if (finalCVSSAverageForAsset >= 0.1 && finalCVSSAverageForAsset <= 3.9) {
+                currentAssetSafetyScore += 20;
+            }
+            else if (finalCVSSAverageForAsset >= 4.0 && finalCVSSAverageForAsset <= 6.9) {
+                currentAssetSafetyScore += 15;
+            }
+            else if (finalCVSSAverageForAsset >= 7.0 && finalCVSSAverageForAsset <= 8.9) {
+                currentAssetSafetyScore += 10;
+            }
+            else if (finalCVSSAverageForAsset >= 9.0 && finalCVSSAverageForAsset <= 10.0) {
+                currentAssetSafetyScore += 5;
+            }
+
+            // 2nd Category: Total Number of CAPECs inked to the Asset (Asset attack surface) (out of 20)??
+            // None (0) -> +25
+            // Low (1 - 30) -> +20
+            // Medium (31 - 99) -> +15
+            // High (100+) -> +10
+            // Check the number of linked patterns and update the score
+            if (numOfLinkedAttackPatterns == 0) {
+                currentAssetSafetyScore += 25;
+            }
+            else if (numOfLinkedAttackPatterns > 0 && numOfLinkedAttackPatterns <= 30) {
+                currentAssetSafetyScore += 20;
+            }
+            else if (numOfLinkedAttackPatterns > 30 && numOfLinkedAttackPatterns < 100) {
+             currentAssetSafetyScore += 15;
+            }
+            else if (numOfLinkedAttackPatterns >= 100) {
+                currentAssetSafetyScore += 10;
+            }
+        }
+        // Exception case: Assets without CWEs automatically get a safety score of 75 only leaving the 25 to be added from the user's response.
+        // I'll probably skip asking the survey question for Assets without CWEs
+        else {
+            currentAssetSafetyScore += 75;
+        }
+        // 1st Category: Survey Answer, happens regardless of linked CWE's
+        // NOT SECURE
         if (Objects.equals(selectedOption, secureOptionsList.get(0))) {
-            assetScore += 0;
+            currentAssetSafetyScore += 5;
         }
-        // SLIGHTLY SECURE (out of 20)
+        // SLIGHTLY SECURE
         else if (Objects.equals(selectedOption, secureOptionsList.get(1))) {
-            assetScore += 5;
+            currentAssetSafetyScore += 10;
         }
-        // MODERATELY SECURE (out of 20)
+        // MODERATELY SECURE
         else if (Objects.equals(selectedOption, secureOptionsList.get(2))) {
-            assetScore += 10;
+            currentAssetSafetyScore += 15;
         }
-        // SECURE (out of 20)
+        // SECURE
         else if (Objects.equals(selectedOption, secureOptionsList.get(3))) {
-            assetScore += 15;
+            currentAssetSafetyScore += 20;
         }
-        // VERY SECURE (out of 20)
+        // VERY SECURE
         else if (Objects.equals(selectedOption, secureOptionsList.get(4))) {
-            assetScore += 20;
+            currentAssetSafetyScore += 25;
         }
 
-        // Assets without CWEs automatically get a safety score of 100.
+        // Scores have been calculated update the DB
+        evaluationDAO.updateAssetScore(currentAssetSafetyScore, currentAssetName, evaluationId);
+        System.out.println("The score for Asset: " + currentAssetName + " is: " + currentAssetSafetyScore);
+        // reset the score calculator
+        currentAssetSafetyScore = 0;
 
-        // Average CVSS v3.x specifications score rating (for each CWE linked to the Asset) (out of 30):
-        // Critical: 9.0 - 10, asset score: +6
-        // High: 7.0 - 8.9, asset score: +12
-        // Medium: 4.0 - 6.9, asset score: +18
-        // Low: 0.1 - 3.9, asset score: +24
-        // None: 0.0, asset score: +30
-        // Go through CWE, get the score, the total score / number of CWEs to get the score for this section
-
-        // CWE Likelihood of exploit (Out of 20), There is 'none' so this score can't be perfect
+        // CWE Likelihood of exploit (Out of 20), There is no 'none' so this score can't be perfect unless there isn't any linked CWE
+        // Might need to change this to EPSS Likelihood
         // High, asset score: +5
         // Medium, asset score: +10
         // Low, asset score: +15
         // Unknown, asset score: +10
         // Go through each CWE, get the score, the total score / number of CWEs to get the score for this section
-
-        // Total Number of Mitigations recommended for the Asset (out of 30)??
-
     }
 
     private void calculateSystemSafetyScore() {
         // total scores of assets / num of assets
+        // get eval ID of the 1st asset as it will be the same for all.
+        evaluationDAO.updateSystemSafetyScore(retrievedEvaluationAssets.get(0).getEvaluationID());
     }
 
     private void closeTreeViewScene() {

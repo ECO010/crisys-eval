@@ -25,8 +25,6 @@ public class TreeViewSceneController {
     // Field(s) and method(s) for getting data from previous controller
     private int yearTo;
     private int yearFrom;
-    //private String assetType;
-    //private String assetName;
     private Evaluation currentEvaluation;
     private List<EvaluationAsset> retrievedEvaluationAssets;
 
@@ -37,14 +35,6 @@ public class TreeViewSceneController {
     public void getEvaluationAssets(List<EvaluationAsset> retrievedEvaluationAssets) {
         this.retrievedEvaluationAssets = retrievedEvaluationAssets;
     }
-
-   /* public void getAssetType(String assetType) {
-        this.assetType = assetType;
-    }*/
-
-   /* public void getAssetName(String assetName) {
-        this.assetName = assetName;
-    }*/
 
     public void getYearTo(int yearTo) {
         this.yearTo = yearTo;
@@ -291,6 +281,8 @@ public class TreeViewSceneController {
             preparednessWindowController.getCurrentEvaluation(currentEvaluation);
             preparednessWindowController.getEvaluationAssets(retrievedEvaluationAssets);
             preparednessWindowController.getGeneratedTree(attackTreeView);
+            preparednessWindowController.getYearFrom(yearFrom);
+            preparednessWindowController.getYearTo(yearTo);
             preparednessWindowController.initializeWithData();
 
             Stage stage = new Stage();
