@@ -11,6 +11,7 @@ public class EvaluationDAO {
     private static final String ADD_EVALUATION = "INSERT OR IGNORE INTO Evaluation (SystemName, EvalDT) VALUES (?, ?)";
     private static final String ADD_EVALUATION_ASSET = "INSERT OR IGNORE INTO EvaluationAsset (EvaluationID, AssetName, AssetType) VALUES (?, ?, ?)";
     private static final String GET_LATEST_EVAL_ID = "SELECT EvaluationID FROM Evaluation ORDER BY EvaluationID DESC LIMIT 1";
+    private static final String GET_SYSTEM_SAFETY_SCORE = "SELECT EvalScore FROM Evaluation WHERE EvaluationID = ?";
     private static final String GET_ASSET_TYPE = "SELECT AssetType FROM EvaluationAsset WHERE EvaluationID = ? AND AssetName = ?";
     private static final String UPDATE_ASSET_SCORE = "UPDATE EvaluationAsset SET AssetSafetyScore = ? WHERE AssetName = ? AND EvaluationID = ?";
     private static final String UPDATE_SYSTEM_SCORE = "UPDATE Evaluation SET EvalScore = ? WHERE EvaluationID = ?";
@@ -63,6 +64,27 @@ public class EvaluationDAO {
             // Handle exceptions as needed
         }
         return evaluationID;
+    }
+
+    public double getSystemSafetyScore(int evaluationID) {
+        double systemSafetyScore = 0.0;
+
+        try (Connection connection = DatabaseConnector.connect();
+             PreparedStatement preparedStatement = connection.prepareStatement(GET_SYSTEM_SAFETY_SCORE)) {
+
+            preparedStatement.setInt(1, evaluationID);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next()) {
+                systemSafetyScore = resultSet.getInt("EvalScore");
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Handle exceptions as needed
+        }
+        return systemSafetyScore;
     }
 
     public String getAssetTypeFromAssetName(int evaluationID, String assetName) {

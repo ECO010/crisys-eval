@@ -19,6 +19,13 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
+// TODO: Clean up, package and submit
+//  Download Evaluation results as CSV
+//  Save Tree As PDF
+//  Load, delete evaluations
+//  Remove duplicate CVEs, CAPECs, etc from counts
+//  Methods not setting the scores for the asset and evaluation objects only updating DB
+
 public class PreparednessWindowController {
     public final String SCENE_TITLE = "Preparedness Survey";
 
@@ -37,9 +44,13 @@ public class PreparednessWindowController {
     @FXML
     private Button continueBtn;
 
+    // Initialize DAO to query the DB
     EvaluationDAO evaluationDAO = new EvaluationDAO();
+    ICSAssetVulnerabilityDAO icsAssetVulnerabilityDAO = new ICSAssetVulnerabilityDAO();
+    CommonWeaknessEnumerationDAO commonWeaknessEnumerationDAO =  new CommonWeaknessEnumerationDAO();
 
     private String selectedOption;
+    private double systemSafetyScore;
 
     List<String> secureOptionsList = new ArrayList<>(Arrays.asList("Not Secure", "Slightly Secure", "Moderately Secure", "Secure", "Very Secure"));
 
@@ -156,7 +167,7 @@ public class PreparednessWindowController {
         EvaluationAsset currentAsset = retrievedEvaluationAssets.get(currentAssetIndex);
         calculateAssetSafetyScore(currentAsset.getAssetName(), currentAsset.getEvaluationID());
 
-        // Clear the selected option from combo box
+        // Clear the selected option from combo box so the user can respond for the next asset
         comboBox.getSelectionModel().clearSelection();
 
         // Increment current asset index
@@ -180,6 +191,8 @@ public class PreparednessWindowController {
 
             // Calculate System Safety score and pass it to the next controller
             calculateSystemSafetyScore();
+            systemSafetyScore = evaluationDAO.getSystemSafetyScore(currentAsset.getEvaluationID());
+            System.out.println("System safety score is: " + systemSafetyScore);
 
             // Navigate to Evaluation End Scene/Window
             try {
@@ -188,6 +201,15 @@ public class PreparednessWindowController {
 
                 // Get the controller of the Evaluation End
                 EvaluationEndController evaluationEndController = loader.getController();
+
+                // Send data across
+                evaluationEndController.getCurrentEvaluation(currentEvaluation);
+                evaluationEndController.getEvaluationAssets(retrievedEvaluationAssets);
+                evaluationEndController.getSystemSafetyScore(systemSafetyScore);
+                evaluationEndController.getGeneratedTree(attackTreeView);
+                evaluationEndController.getYearFrom(yearFrom);
+                evaluationEndController.getYearTo(yearTo);
+                evaluationEndController.updateProgress(systemSafetyScore);
 
                 // Get the current stage from the event source
                 Stage currentStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
@@ -209,25 +231,30 @@ public class PreparednessWindowController {
 
     // Total Asset Safety Score Out of Hundred
     // Split into 4 categories:
-    // Survey Answer (out of 25)
-    // Average CVSS Scores (out of 25)
-    // Total number of attack patterns linked to the asset (out of 25)
-    // Weakness Likelihood of Exploit (out of 25)***
-    // EPSS score linked to CVE's linked to CWE (the score representing the probability [0-1] of exploitation in the wild in the next 30 days (following score publication)) ??
+    // Survey Answer (out of 25) -> 1st
+    // Average CVSS Scores (out of 25) -> 2nd
+    // Total number of attack patterns linked to the asset (out of 25) -> 3rd
+    // Average EPSS score for CVEs linked to CWE (out of 25) -> 4th
+    // (the EPSS score represents the probability [0-1] of exploitation in the wild in the next 30 days (following daily score publication))
     private void calculateAssetSafetyScore(String currentAssetName, int evaluationId) {
         TreeItem<String> assetNode = attackTreeView.getRoot().getChildren().get(currentAssetIndex);
+        String assetType = evaluationDAO.getAssetTypeFromAssetName(evaluationId, assetNode.getValue());
         // Get the list of CWEs under the asset node
         List<TreeItem<String>> cweNodes = assetNode.getChildren();
 
         if (!cweNodes.isEmpty()) {
             int numOfLinkedAttackPatterns = 0;
+            int numOfLinkedCVEsToAsset = 0;
             Double averageCVSSTotal = 0.0;
+            Double averageEPSSTotal = 0.0;
 
             // Loop through each CWE node
             for (TreeItem<String> cweNode : cweNodes) {
 
                 // Get the list of Attack Patterns (CAPECs) under the CWE node
                 List<TreeItem<String>> capecNodes = cweNode.getChildren();
+
+                // Go through each capec node and add the ones with a likelihood of medium and high
                 numOfLinkedAttackPatterns += capecNodes.size();
 
                 // Go through CWE, get the score, the total score / number of CWEs to get the score for this section
@@ -237,14 +264,42 @@ public class PreparednessWindowController {
                 CommonWeaknessEnumeration cwe = CommonWeaknessEnumeration.fromStringToCWE(cweDisplayName);
                 String cweId = cwe.getCweId();
 
-                // Initialize DAO to query the DB
-                ICSAssetVulnerabilityDAO icsAssetVulnerabilityDAO = new ICSAssetVulnerabilityDAO();
+                // for each CWE, get the linked CVEs
+                String linkedCVEs = commonWeaknessEnumerationDAO.getLinkedCVEs(cweId, assetType, yearFrom, yearTo);
+
+                // CVEs come as a single string with commas (i.e. CVE2024-xx, CVE2023-xx).
+                // Split by commas
+                // loop through each split CVE and get the EPSS score from the DB (WHERE CVENumber = 'value we get from splitting?')
+                // update the value of total CVEs linked (NumOfLinkedCVEsToAsset)
+                // update the value of averageEPSSTotal with the value fetched from each CVE
+                // CVEs come as a single string with commas (i.e. CVE2024-xx, CVE2023-xx).
+                // Split by commas
+                if (!linkedCVEs.isEmpty())
+                {
+                    String[] cveArray = linkedCVEs.split(",\\s*");
+                    // Initialize variables to track EPSS score calculation
+                    numOfLinkedCVEsToAsset += cveArray.length;
+
+                    // Loop through each split CVE and get the EPSS score from the DB
+                    for (String cve : cveArray) {
+                        // Query the database to retrieve EPSS score for the current CVE
+                        double epssScore = icsAssetVulnerabilityDAO.getEPSSForCVE(cve);
+                        // Testing data
+                        System.out.println(cve + " has an EPSS core of: " + epssScore);
+                        // Update the total EPSS score
+                        averageEPSSTotal += epssScore;
+                    }
+                }
                 // get the average cvss score for each cwe and add them
                 averageCVSSTotal += icsAssetVulnerabilityDAO.getAverageCVSSForCWE(cweId, yearFrom, yearTo);
             }
-            // divide the total of the averages by the number of cwes
+            System.out.println("average cvss total for asset" +(currentAssetIndex) + " is: " + averageCVSSTotal);
+            System.out.println("average epss total for asset" +(currentAssetIndex) + " is: " + averageEPSSTotal);
+            System.out.println("asset" +(currentAssetIndex) + " has: " + numOfLinkedCVEsToAsset + " CVEs");
+            // divide the total of the averages by the number of CWEs
             Double finalCVSSAverageForAsset = averageCVSSTotal / cweNodes.size();
-            // 3rd Category: Average CVSS v3.x specifications score rating (for each CWE linked to the Asset) (out of 30):
+            System.out.println("final cvss average to categorize for asset: " + currentAssetName + "is: " + finalCVSSAverageForAsset);
+            // 2nd Category: Average CVSS v3.x specifications score rating (for each CWE linked to the Asset) (out of 30):
             // Critical: 9.0 - 10, asset score: +5
             // High: 7.0 - 8.9, asset score: +10
             // Medium: 4.0 - 6.9, asset score: +15
@@ -254,44 +309,123 @@ public class PreparednessWindowController {
             if (finalCVSSAverageForAsset == 0.0) {
                 currentAssetSafetyScore += 25;
             }
-            else if (finalCVSSAverageForAsset >= 0.1 && finalCVSSAverageForAsset <= 3.9) {
-                currentAssetSafetyScore += 20;
-            }
-            else if (finalCVSSAverageForAsset >= 4.0 && finalCVSSAverageForAsset <= 6.9) {
-                currentAssetSafetyScore += 15;
-            }
-            else if (finalCVSSAverageForAsset >= 7.0 && finalCVSSAverageForAsset <= 8.9) {
-                currentAssetSafetyScore += 10;
-            }
-            else if (finalCVSSAverageForAsset >= 9.0 && finalCVSSAverageForAsset <= 10.0) {
-                currentAssetSafetyScore += 5;
-            }
-
-            // 2nd Category: Total Number of CAPECs inked to the Asset (Asset attack surface) (out of 20)??
-            // None (0) -> +25
-            // Low (1 - 30) -> +20
-            // Medium (31 - 99) -> +15
-            // High (100+) -> +10
-            // Check the number of linked patterns and update the score
-            if (numOfLinkedAttackPatterns == 0) {
+            else if (finalCVSSAverageForAsset >= 0.01 && finalCVSSAverageForAsset <= 3.9) {
                 currentAssetSafetyScore += 25;
             }
-            else if (numOfLinkedAttackPatterns > 0 && numOfLinkedAttackPatterns <= 30) {
+            else if (finalCVSSAverageForAsset >= 4.0 && finalCVSSAverageForAsset <= 6.9) {
                 currentAssetSafetyScore += 20;
             }
-            else if (numOfLinkedAttackPatterns > 30 && numOfLinkedAttackPatterns < 100) {
-             currentAssetSafetyScore += 15;
+            else if (finalCVSSAverageForAsset >= 7.0 && finalCVSSAverageForAsset <= 8.9) {
+                currentAssetSafetyScore += 15;
             }
-            else if (numOfLinkedAttackPatterns >= 100) {
+            else if (finalCVSSAverageForAsset >= 9.0 && finalCVSSAverageForAsset <= 10.0) {
                 currentAssetSafetyScore += 10;
+            }
+
+            // 3rd Category: Total Number of CAPECs inked to the Asset (Asset attack surface) (out of 25)??
+            // None (0) -> +25
+            // Low (1 - 30) -> +20
+            // Medium (31 - 50) -> +15
+            // High (50+) -> +10
+            // Check the number of linked patterns and update the score
+            // If the user selects This Year
+            System.out.println("The number of linked attack patterns for " + currentAssetName + " is " + numOfLinkedAttackPatterns);
+            if (yearTo - yearFrom == 0) {
+                if (numOfLinkedAttackPatterns == 0) {
+                    currentAssetSafetyScore += 25;
+                }
+                else if (numOfLinkedAttackPatterns > 0 && numOfLinkedAttackPatterns <= 50) {
+                    currentAssetSafetyScore += 20;
+                }
+                else if (numOfLinkedAttackPatterns > 50 && numOfLinkedAttackPatterns < 100) {
+                    currentAssetSafetyScore += 15;
+                }
+                else if (numOfLinkedAttackPatterns >= 100) {
+                    currentAssetSafetyScore += 10;
+                }
+            }
+            // If the user selects Last Year
+            else if (yearTo - yearFrom == 1) {
+                int multiplier = 2;
+                if (numOfLinkedAttackPatterns == 0) {
+                    currentAssetSafetyScore += 25;
+                }
+                else if (numOfLinkedAttackPatterns > 0 && numOfLinkedAttackPatterns <= 50 * multiplier) {
+                    currentAssetSafetyScore += 20;
+                }
+                else if (numOfLinkedAttackPatterns > 50 * multiplier && numOfLinkedAttackPatterns < 100 * multiplier) {
+                    currentAssetSafetyScore += 15;
+                }
+                else if (numOfLinkedAttackPatterns >= 100 * multiplier) {
+                    currentAssetSafetyScore += 10;
+                }
+            }
+            // If the User Selects Last 5 Years
+            else if (yearTo - yearFrom == 4) {
+                int multiplier = 5;
+                if (numOfLinkedAttackPatterns == 0) {
+                    currentAssetSafetyScore += 25;
+                }
+                else if (numOfLinkedAttackPatterns > 0 && numOfLinkedAttackPatterns <= 50 * multiplier) {
+                    currentAssetSafetyScore += 20;
+                }
+                else if (numOfLinkedAttackPatterns > 50 * multiplier && numOfLinkedAttackPatterns < 100 * multiplier) {
+                    currentAssetSafetyScore += 15;
+                }
+                else if (numOfLinkedAttackPatterns >= 100 * multiplier) {
+                    currentAssetSafetyScore += 10;
+                }
+            }
+            // If the User Selects All Time
+            else if (yearTo - yearFrom > 4) {
+                int multiplier = 10;
+                if (numOfLinkedAttackPatterns == 0) {
+                    currentAssetSafetyScore += 25;
+                }
+                else if (numOfLinkedAttackPatterns > 0 && numOfLinkedAttackPatterns <= 50 * multiplier) {
+                    currentAssetSafetyScore += 20;
+                }
+                else if (numOfLinkedAttackPatterns > 50 * multiplier && numOfLinkedAttackPatterns < 100 * multiplier) {
+                    currentAssetSafetyScore += 15;
+                }
+                else if (numOfLinkedAttackPatterns >= 100 * multiplier) {
+                    currentAssetSafetyScore += 10;
+                }
+            }
+
+            // 4th Category: Average EPSS score for all CVEs linked to CWE in the timeframe selected
+            // (the score representing the probability [0-1] of exploitation in the wild in the next 30 days (following score publication))
+            // multiply EPSS score by 100 to give a percent rating
+            // weighting my score rating similar to CVSS
+            // Very High: 90 - 100, asset score: +5
+            // High: 70 - 89, asset score: +10
+            // Medium: 40 - 69, asset score: +15
+            // Low: 1 - 39, asset score: +20
+            // None: < 1, asset score: +25
+            Double finalEpssAverageForAsset = averageEPSSTotal / numOfLinkedCVEsToAsset;
+            System.out.println("final epss average to categorize for asset: " + currentAssetName + "is: " + finalEpssAverageForAsset);
+            if (finalEpssAverageForAsset < 1) {
+                currentAssetSafetyScore += 25;
+            }
+            else if (finalEpssAverageForAsset >= 1 && finalCVSSAverageForAsset < 40) {
+                currentAssetSafetyScore += 20;
+            }
+            else if (finalEpssAverageForAsset >= 40 && finalCVSSAverageForAsset < 70) {
+                currentAssetSafetyScore += 15;
+            }
+            else if (finalEpssAverageForAsset >= 70 && finalCVSSAverageForAsset < 90) {
+                currentAssetSafetyScore += 10;
+            }
+            else if (finalEpssAverageForAsset >= 90 && finalCVSSAverageForAsset < 100) {
+                currentAssetSafetyScore += 5;
             }
         }
         // Exception case: Assets without CWEs automatically get a safety score of 75 only leaving the 25 to be added from the user's response.
-        // I'll probably skip asking the survey question for Assets without CWEs
+        // I should probably skip asking the survey question for Assets without CWEs
         else {
             currentAssetSafetyScore += 75;
         }
-        // 1st Category: Survey Answer, happens regardless of linked CWE's
+        // 1st Category: Survey Answer, happens regardless of linked CWEs
         // NOT SECURE
         if (Objects.equals(selectedOption, secureOptionsList.get(0))) {
             currentAssetSafetyScore += 5;
@@ -315,18 +449,48 @@ public class PreparednessWindowController {
 
         // Scores have been calculated update the DB
         evaluationDAO.updateAssetScore(currentAssetSafetyScore, currentAssetName, evaluationId);
+        // Testing score output
         System.out.println("The score for Asset: " + currentAssetName + " is: " + currentAssetSafetyScore);
         // reset the score calculator
         currentAssetSafetyScore = 0;
-
-        // CWE Likelihood of exploit (Out of 20), There is no 'none' so this score can't be perfect unless there isn't any linked CWE
-        // Might need to change this to EPSS Likelihood
-        // High, asset score: +5
-        // Medium, asset score: +10
-        // Low, asset score: +15
-        // Unknown, asset score: +10
-        // Go through each CWE, get the score, the total score / number of CWEs to get the score for this section
     }
+
+/*    private int calculateSurveyAnswerScore(String selectedOption) {
+        switch(selectedOption) {
+            case "Not Secure":
+                return 5;
+            case "Slightly Secure":
+                return 10;
+            case "Moderately Secure":
+                return 15;
+            case "Secure":
+                return 20;
+            case "Very Secure":
+                return 25;
+            default:
+                return 0; // Handle invalid options
+        }
+    }
+
+    private double calculateAverageCVSSForAsset(List<TreeItem<String>> cweNodes) {
+        // Code for calculating average CVSS score
+    }
+
+    private int calculateCVSSScoreCategory(double cvssScore) {
+        // Code for categorizing CVSS score
+    }
+
+    private int calculateAttackPatternScore(List<TreeItem<String>> capecNodes) {
+        // Code for calculating attack pattern score
+    }
+
+    private double calculateAverageEPSSForCVEs(String linkedCVEs) {
+        // Code for calculating average EPSS score
+    }
+
+    private int calculateEPSSScoreCategory(double epssScore) {
+        // Code for categorizing EPSS score
+    }*/
 
     private void calculateSystemSafetyScore() {
         // total scores of assets / num of assets

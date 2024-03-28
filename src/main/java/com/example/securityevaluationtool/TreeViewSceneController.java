@@ -206,7 +206,7 @@ public class TreeViewSceneController {
             }
             String mitigationsDisplay = sb.toString();
 
-            // Fetch CVE's from ICSAssetVulnerability. Make sure it's filtered by the selected years, CweNumber, Asset Type
+            // Fetch CVEs from ICSAssetVulnerability. Make sure it's filtered by the selected years, CweNumber, Asset Type
             CommonWeaknessEnumerationDAO commonWeaknessEnumerationDAO = new CommonWeaknessEnumerationDAO();
             String linkedCVEs = commonWeaknessEnumerationDAO.getLinkedCVEs(selectedWeakness.getCweId(), assetType, yearFrom, yearTo);
 

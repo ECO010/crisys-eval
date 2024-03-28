@@ -3,7 +3,7 @@ package com.example.securityevaluationtool.database;
 public class Evaluation {
     private String criticalSystemName;
     private String evaluationDate;
-    private int evaluationScore;
+    private double evaluationScore;
 
     public String getCriticalSystemName() {
         return criticalSystemName;
@@ -21,11 +21,11 @@ public class Evaluation {
         this.evaluationDate = evaluationDate;
     }
 
-    public int getEvaluationScore() {
+    public double getEvaluationScore() {
         return evaluationScore;
     }
 
-    public void setEvaluationScore(int evaluationScore) {
+    public void setEvaluationScore(double evaluationScore) {
         this.evaluationScore = evaluationScore;
     }
 }
