@@ -7,6 +7,7 @@ import javafx.scene.control.TextArea;
 public class AttackNodeCardController {
 
     public final String SCENE_TITLE = "Attack Details";
+
     @FXML
     public Label nameLabel;
     @FXML
@@ -25,10 +26,6 @@ public class AttackNodeCardController {
     public void initialize() {
         // Initialization logic (if needed)
     }
-
-    // TODO:
-    //  Get Mitigations to show on the card
-    //  Redesign Card FXML (Remove h-box, v-box, make them simple labels/icons. Only mitigations should be a V-Box because of the checkboxes)
 
     public void setData(String name, int capecId, String description, String likelihood, String severity, String taxonomyMapping, String mitigations) {
         nameLabel.setText(nameLabel.getText() + name);

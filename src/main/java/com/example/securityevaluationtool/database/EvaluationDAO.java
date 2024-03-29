@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class EvaluationDAO {
@@ -12,6 +13,8 @@ public class EvaluationDAO {
     private static final String ADD_EVALUATION_ASSET = "INSERT OR IGNORE INTO EvaluationAsset (EvaluationID, AssetName, AssetType) VALUES (?, ?, ?)";
     private static final String GET_LATEST_EVAL_ID = "SELECT EvaluationID FROM Evaluation ORDER BY EvaluationID DESC LIMIT 1";
     private static final String GET_SYSTEM_SAFETY_SCORE = "SELECT EvalScore FROM Evaluation WHERE EvaluationID = ?";
+    private static final String GET_EVALUATIONS = "SELECT * FROM Evaluation";
+    private static final String GET_ASSET_SAFETY_SCORE = "SELECT AssetSafetyScore FROM EvaluationAsset WHERE EvaluationID = ? AND AssetName = ?";
     private static final String GET_ASSET_TYPE = "SELECT AssetType FROM EvaluationAsset WHERE EvaluationID = ? AND AssetName = ?";
     private static final String UPDATE_ASSET_SCORE = "UPDATE EvaluationAsset SET AssetSafetyScore = ? WHERE AssetName = ? AND EvaluationID = ?";
     private static final String UPDATE_SYSTEM_SCORE = "UPDATE Evaluation SET EvalScore = ? WHERE EvaluationID = ?";
@@ -87,6 +90,28 @@ public class EvaluationDAO {
         return systemSafetyScore;
     }
 
+    public int getAssetSafetyScore(int evaluationID, String assetName) {
+        int assetSafetyScore = 0;
+
+        try (Connection connection = DatabaseConnector.connect();
+             PreparedStatement preparedStatement = connection.prepareStatement(GET_ASSET_SAFETY_SCORE)) {
+
+            preparedStatement.setInt(1, evaluationID);
+            preparedStatement.setString(2, assetName);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next()) {
+                assetSafetyScore = resultSet.getInt("AssetSafetyScore");
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Handle exceptions as needed
+        }
+        return assetSafetyScore;
+    }
+
     public String getAssetTypeFromAssetName(int evaluationID, String assetName) {
         String assetType = "";
 
@@ -150,4 +175,28 @@ public class EvaluationDAO {
         }
     }
 
+    public List<Evaluation> getEvaluationsFromDatabase() {
+        List<Evaluation> evaluations = new ArrayList<>();
+
+        try (Connection connection = DatabaseConnector.connect();
+             PreparedStatement preparedStatement = connection.prepareStatement(GET_EVALUATIONS)) {
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next()) {
+                Evaluation evaluation = new Evaluation();
+
+                evaluation.setEvaluationDate(resultSet.getString("evalDT"));
+                evaluation.setCriticalSystemName(resultSet.getString("systemName"));
+                evaluation.setEvaluationScore(resultSet.getDouble("EvalScore"));
+                evaluation.setEvaluationID(resultSet.getInt("EvaluationID"));
+
+                evaluations.add(evaluation);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Handle exceptions as needed
+        }
+        return evaluations;
+    }
 }

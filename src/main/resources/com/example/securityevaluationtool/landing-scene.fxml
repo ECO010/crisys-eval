@@ -24,10 +24,11 @@
         <!-- No need to specify the image source here -->
     </ImageView>
 
-    <HBox alignment="CENTER_RIGHT" layoutX="208.0" layoutY="336.0" prefHeight="70.0" prefWidth="370.0" spacing="10.0">
+    <HBox alignment="CENTER_RIGHT" layoutX="59.0" layoutY="348.0" prefHeight="54.0" prefWidth="497.0" spacing="10.0">
         <children>
-            <Button mnemonicParsing="false" onAction="#onBeginEvaluationClick" prefWidth="129.0" text="Begin Evaluation" />
-            <Button mnemonicParsing="false" onAction="#onCheckIcsAssetClick" text="Check ICS Asset Vulnerabilities" />
+            <Button mnemonicParsing="false" onAction="#onBeginEvaluationClick" prefHeight="25.0" prefWidth="147.0" text="Begin New Evaluation" />
+         <Button mnemonicParsing="false" onAction="#onPastEvaluationClick" text="View Past Evaluations" />
+            <Button mnemonicParsing="false" onAction="#onCheckIcsAssetClick" text="Check ICS Vulnerabilities Database" />
         </children>
         <padding>
             <Insets top="20.0" />

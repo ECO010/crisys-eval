@@ -2,8 +2,10 @@ package com.example.securityevaluationtool.database;
 
 public class Evaluation {
     private String criticalSystemName;
+
     private String evaluationDate;
     private double evaluationScore;
+    private int evaluationID;
 
     public String getCriticalSystemName() {
         return criticalSystemName;
@@ -27,5 +29,13 @@ public class Evaluation {
 
     public void setEvaluationScore(double evaluationScore) {
         this.evaluationScore = evaluationScore;
+    }
+
+    public int getEvaluationID() {
+        return evaluationID;
+    }
+
+    public void setEvaluationID(int evaluationID) {
+        this.evaluationID = evaluationID;
     }
 }

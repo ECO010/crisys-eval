@@ -15,7 +15,7 @@
          </font>
       </TextArea>
       <ComboBox fx:id="comboBox" layoutX="277.0" layoutY="269.0" onAction="#onComboClick" prefHeight="27.0" prefWidth="242.0" promptText="Please select a timeframe filter" />
-      <Label layoutX="108.0" layoutY="37.0" text="This tool evaluates the saftey of your assets by generating a tree of weaknesses and exploits.">
+      <Label layoutX="108.0" layoutY="37.0" text="This tool evaluates the safety of your assets by generating a tree of weaknesses and exploits.">
          <font>
             <Font name="Arial Bold" size="13.0" />
          </font>

@@ -3,6 +3,7 @@ package com.example.securityevaluationtool;
 import com.example.securityevaluationtool.database.Evaluation;
 import com.example.securityevaluationtool.database.EvaluationAsset;
 import javafx.fxml.FXML;
+import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TreeView;
 
@@ -13,6 +14,9 @@ public class EvaluationEndController {
 
     @FXML
     private ProgressIndicator systemSafetyScoreIndicator;
+
+    @FXML
+    private Label evaluationEndHeading;
 
     // Field(s) and method(s) for getting data from previous controller
     private Evaluation currentEvaluation;
@@ -52,5 +56,9 @@ public class EvaluationEndController {
 
         // Set the progress value of the progress indicator
         systemSafetyScoreIndicator.setProgress(progress);
+    }
+
+    public void updateHeading() {
+        evaluationEndHeading.setText("This is the end of the evaluation for " + currentEvaluation.getCriticalSystemName());
     }
 }

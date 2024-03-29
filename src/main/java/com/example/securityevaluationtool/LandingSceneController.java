@@ -6,7 +6,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
@@ -18,21 +17,7 @@ public class LandingSceneController {
 
     public final String SCENE_TITLE = "CriSysEval: A Security Evaluation Tool For Critical Systems";
 
-    // TODO:
-    //  Implement ICS Asset vulnerability functionality:
-    //  Get Asset data into DB, Get Vulnerability data into DB, Display them on another scene
-    //  Filter them by Release Date, Asset Type, Vendor, CVSS Scores
-    //  Get rid of useless stuff
-    @FXML
-    private Label welcomeText;
-
-    @FXML
-    protected void onHelloButtonClick() {
-        welcomeText.setText("Welcome to JavaFX Application!");
-    }
-
-    // TODO: Evaluation date taken at the time button is clicked, evalId autoincrement, Eval name (Evaluation 001)
-    //  Create a new evaluation everytime Begin Eval is clicked, Name CS001 increasing incrementally (CS002, CS003) (root node)
+    // Navigate to the evaluation start scene
     @FXML
     protected void onBeginEvaluationClick(ActionEvent event) {
         // Navigate to the Tree Prompt Screen
@@ -40,8 +25,6 @@ public class LandingSceneController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("evaluation-start.fxml")); // change the file to test
             Parent root = loader.load();
 
-          //TreePromptSceneController treePromptSceneController = loader.getController();
-            /*controller.setPreviousController(this);*/
             EvaluationStartController evaluationStartController = loader.getController();
 
             Stage stage = new Stage();
@@ -49,16 +32,40 @@ public class LandingSceneController {
             stage.setTitle(evaluationStartController.SCENE_TITLE);
             stage.show();
 
-            // Close the current scene if needed
+            // Close the current scene
             Stage currentStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            currentStage.close(); // Close instead of hide
-            //((Node)(event.getSource())).getScene().getWindow().hide();
+            currentStage.close();
         } catch (IOException e) {
             e.printStackTrace();
             // Handle loading error
         }
     }
 
+    // Navigate to the Evaluation List scene
+    @FXML
+    protected void onPastEvaluationClick(ActionEvent event) {
+        // Navigate to the Tree Prompt Screen
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("evaluation-list-scene.fxml"));
+            Parent root = loader.load();
+
+            EvaluationListController evaluationListController = loader.getController();
+
+            Stage stage = new Stage();
+            stage.setScene(new Scene(root));
+            stage.setTitle(evaluationListController.SCENE_TITLE);
+            stage.show();
+
+            // Close the current scene
+            Stage currentStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            currentStage.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            // Handle loading error
+        }
+    }
+
+    // Navigate to the scene for ICS vulnerabilities
     @FXML
     protected void onCheckIcsAssetClick(ActionEvent event) {
         // Navigate to the Tree Prompt Screen
@@ -66,17 +73,16 @@ public class LandingSceneController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("icsa-database-view.fxml"));
             Parent root = loader.load();
 
-          /*  TreePromptSceneController controller = loader.getController();
-            controller.setPreviousController(this);*/
+            IcsaDatabaseViewController icsaDatabaseViewController = loader.getController();
 
             Stage stage = new Stage();
             stage.setScene(new Scene(root));
-            stage.setTitle("ICS Advisory Database");
+            stage.setTitle(icsaDatabaseViewController.SCENE_TITLE);
             stage.show();
 
-            // Close the current scene if needed
+            // Close the current scene
             Stage currentStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            currentStage.close(); // Close instead of hide
+            currentStage.close();
         } catch (IOException e) {
             e.printStackTrace();
             // Handle loading error

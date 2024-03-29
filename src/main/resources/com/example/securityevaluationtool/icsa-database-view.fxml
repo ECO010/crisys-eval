@@ -11,18 +11,18 @@
       <ComboBox fx:id="cvssSeverityComboBox" layoutX="41.0" layoutY="109.0" onAction="#onSeverityComboClick" prefHeight="25.0" prefWidth="169.0" promptText="Filter by CVSS Severity" />
       <TableView fx:id="table" layoutY="165.0" prefHeight="465.0" prefWidth="1000.0">
         <columns>
-          <TableColumn fx:id="icsaid" prefWidth="100.0" text="ICSA ID" />
+          <TableColumn fx:id="icsaid" prefWidth="100.0" text="ICSA ID" visible="false" />
+            <TableColumn fx:id="icsaCertNumber" prefWidth="75.0" text="ICSA Cert Num" />
             <TableColumn fx:id="icsaAdvisoryTitle" prefWidth="75.0" text="ICSA Title" />
-          <TableColumn fx:id="releaseYear" prefWidth="75.0" text="Year " />
+            <TableColumn fx:id="product" prefWidth="75.0" text="Product" />
+            <TableColumn fx:id="vendor" prefWidth="75.0" text="Vendor" />
             <TableColumn fx:id="cveNumber" prefWidth="75.0" text="CVE Num" />
             <TableColumn fx:id="cweNumber" prefWidth="75.0" text="CWE Num" />
             <TableColumn fx:id="assetType" prefWidth="128.0" text="Affected Asset Types" />
-            <TableColumn fx:id="criticalInfrastructureSector" prefWidth="104.0" text="Sectors Affected" />
+            <TableColumn fx:id="criticalInfrastructureSector" prefWidth="104.0" text="Sectors Affected" visible="false" />
             <TableColumn fx:id="cvssSeverity" prefWidth="75.0" text="CVSS Severity" />
             <TableColumn fx:id="cumulativeCVSS" prefWidth="75.0" text="Cumulative CVSS" />
-            <TableColumn fx:id="icsaCertNumber" prefWidth="75.0" text="ICSA Cert Num" />
-            <TableColumn fx:id="product" prefWidth="75.0" text="Product" visible="false" />
-            <TableColumn fx:id="vendor" prefWidth="75.0" text="Vendor" visible="false" />
+          <TableColumn fx:id="releaseYear" prefWidth="75.0" text="Year " />
         </columns>
          <columnResizePolicy>
             <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
@@ -30,6 +30,7 @@
       </TableView>
       <ComboBox fx:id="assetTypeComboBox" layoutX="246.0" layoutY="63.0" onAction="#onAssetTypeComboClick" prefHeight="25.0" prefWidth="169.0" promptText="Filter by Affected Assets" />
       <ComboBox fx:id="yearComboBox" layoutX="41.0" layoutY="63.0" onAction="#onYearComboClick" prefHeight="25.0" prefWidth="169.0" promptText="Filter by Release Year" />
+      <ComboBox fx:id="vendorComboBox" layoutX="246.0" layoutY="109.0" onAction="#onVendorComboClick" prefHeight="25.0" prefWidth="169.0" promptText="Filter by Vendor" />
       <Button fx:id="backBtn" layoutX="443.0" layoutY="661.0" mnemonicParsing="false" onAction="#onBackClick" prefHeight="25.0" prefWidth="135.0" text="Back" />
    </children>
 </AnchorPane>

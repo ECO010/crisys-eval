@@ -37,26 +37,6 @@ public class AttackPatternDAO {
         }
     }
 
-    public List<Integer> getAllIcsCapecIds() {
-        List<Integer> capecIDs = new ArrayList<>();
-
-        try (Connection connection = DatabaseConnector.connect();
-             PreparedStatement preparedStatement = connection.prepareStatement("SELECT capecid FROM AttackPattern WHERE IsICSRelated = 1")) {
-
-            ResultSet resultSet = preparedStatement.executeQuery();
-
-            // Retrieve the CAPEC IDs and add them to the list
-            while (resultSet.next()) {
-                int capecID = resultSet.getInt("capecid");
-                capecIDs.add(capecID);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            // Handle exceptions as needed
-        }
-        return capecIDs;
-    }
-
     public String getAttackNameFromDB(int capecId) {
         String attackName = "";
         try (Connection connection = DatabaseConnector.connect();

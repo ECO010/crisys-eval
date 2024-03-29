@@ -22,6 +22,8 @@ import java.util.List;
 //TODO: Show Product and Vendor, maybe add filter for Vendor and/or product.
 public class IcsaDatabaseViewController {
 
+    public final String SCENE_TITLE = "ICS Advisory Database";
+
     @FXML
     private TableView<ICSAssetVulnerability> table;
 
@@ -70,11 +72,15 @@ public class IcsaDatabaseViewController {
     @FXML
     private ComboBox<Integer> yearComboBox;
 
+    @FXML
+    private ComboBox<String> vendorComboBox;
+
     private final ICSAssetVulnerabilityDAO icsAssetVulnerabilityDAO = new ICSAssetVulnerabilityDAO();
 
     private Integer selectedYear;
     private String selectedAssetType;
     private String selectedCVSSSeverity;
+    private String selectedVendor;
 
     @FXML
     private void initialize() {
@@ -111,6 +117,11 @@ public class IcsaDatabaseViewController {
         List<String> assetTypes = icsAssetVulnerabilityDAO.getAssetTypes();
         ObservableList<String> assetTypeOptions = FXCollections.observableList(assetTypes);
         assetTypeComboBox.setItems(assetTypeOptions);
+
+        // Get options for vendors
+        List<String> distinctVendors = icsAssetVulnerabilityDAO.getDistinctVendor();
+        ObservableList<String> distinctVendorOptions = FXCollections.observableList(distinctVendors);
+        vendorComboBox.setItems(distinctVendorOptions);
     }
 
     @FXML
@@ -122,10 +133,6 @@ public class IcsaDatabaseViewController {
 
             // Get the controller of the landing scene
             LandingSceneController landingSceneController = loader.getController();
-
-            // Set the landing scene controller as the previous controller
-            // This allows for communication between scenes if needed
-            // landingSceneController.setPreviousController(this);
 
             // Get the current stage from the event source
             Stage currentStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
@@ -162,6 +169,12 @@ public class IcsaDatabaseViewController {
         updateTableView();
     }
 
+    @FXML
+    private void onVendorComboClick() {
+        selectedVendor = vendorComboBox.getValue();
+        updateTableView();
+    }
+
     private void updateTableView() {
         // Construct SQL query dynamically based on selected filter criteria
         String query = "SELECT ICSAID, Year, CVENumber, CWENumber, InfrastructureSector, CVSSSeverity, \n" +
@@ -179,9 +192,12 @@ public class IcsaDatabaseViewController {
         if (selectedCVSSSeverity != null) {
             query += "\nAND cvssSeverity = ?";
         }
+        if (selectedVendor != null) {
+            query += "\nAND vendor = ?";
+        }
 
         // Fetch filtered data from the database based on constructed query and parameters
-        List<ICSAssetVulnerability> filteredData = icsAssetVulnerabilityDAO.getFilteredData(query, selectedYear, selectedAssetType, selectedCVSSSeverity);
+        List<ICSAssetVulnerability> filteredData = icsAssetVulnerabilityDAO.getFilteredData(query, selectedYear, selectedAssetType, selectedCVSSSeverity, selectedVendor);
 
         // Clear existing data in the TableView
         table.getItems().clear();

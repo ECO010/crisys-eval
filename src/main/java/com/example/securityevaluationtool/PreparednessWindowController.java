@@ -14,26 +14,19 @@ import javafx.stage.Stage;
 import javafx.stage.Window;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
-// TODO: Clean up, package and submit
-//  Download Evaluation results as CSV
-//  Save Tree As PDF
+// TODO: Definitely see how calculations can be quicker (it connects to the DB too many times, look for other ways to improve efficiency)
+//  ***Save Tree As PDF***
+//  Clean up, package and submit
+//  ***Download Evaluation results as CSV***
 //  Load, delete evaluations
-//  Remove duplicate CVEs, CAPECs, etc from counts
-//  Methods not setting the scores for the asset and evaluation objects only updating DB
 
 public class PreparednessWindowController {
     public final String SCENE_TITLE = "Preparedness Survey";
 
     @FXML
     private Button backToTreeViewBtn;
-
-    @FXML
-    private Button previousAssetBtn;
 
     @FXML
     private ComboBox<String> comboBox;
@@ -44,10 +37,11 @@ public class PreparednessWindowController {
     @FXML
     private Button continueBtn;
 
-    // Initialize DAO to query the DB
-    EvaluationDAO evaluationDAO = new EvaluationDAO();
-    ICSAssetVulnerabilityDAO icsAssetVulnerabilityDAO = new ICSAssetVulnerabilityDAO();
-    CommonWeaknessEnumerationDAO commonWeaknessEnumerationDAO =  new CommonWeaknessEnumerationDAO();
+    // Initialize DAOs to query the DB
+    private final EvaluationDAO evaluationDAO = new EvaluationDAO();
+    private final ICSAssetVulnerabilityDAO icsAssetVulnerabilityDAO = new ICSAssetVulnerabilityDAO();
+    private final CommonWeaknessEnumerationDAO commonWeaknessEnumerationDAO =  new CommonWeaknessEnumerationDAO();
+    private final AttackPatternDAO attackPatternDAO = new AttackPatternDAO();
 
     private String selectedOption;
     private double systemSafetyScore;
@@ -152,79 +146,94 @@ public class PreparednessWindowController {
     }
 
     // Should just move window behind tree view not really close
+    // Bring treeView into focus
     @FXML
     private void onBackClick() {
-        // Close the current scene
         Stage stage = (Stage) backToTreeViewBtn.getScene().getWindow();
-        stage.close();
+        // Bring the tree view stage to the front by moving this one to the back
+        stage.toBack();
     }
 
     // Navigate to the window/scene with the security preparedness score
     // Close both scenes: The TreeView Scene and the PreparednessWindowScene
     @FXML
     private void onContinueClick(ActionEvent event) {
-        // Calculate security score for Current Asset and update the DB
-        EvaluationAsset currentAsset = retrievedEvaluationAssets.get(currentAssetIndex);
-        calculateAssetSafetyScore(currentAsset.getAssetName(), currentAsset.getEvaluationID());
-
-        // Clear the selected option from combo box so the user can respond for the next asset
-        comboBox.getSelectionModel().clearSelection();
-
-        // Increment current asset index
-        currentAssetIndex++;
-        // Handle navigation to the next retrieved asset
-        if (currentAssetIndex <= retrievedEvaluationAssets.size() - 1) {
-            updateAssetInfo();
+        // Make sure combo box isn't null before calculation
+        // check if selected option has a value, if not error
+        if (selectedOption == null) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText(null);
+            alert.setContentText("Please select an option");
+            alert.showAndWait();
         }
         else {
-            System.out.println(currentEvaluation.getCriticalSystemName());
-            System.out.println(retrievedEvaluationAssets.size());
-            //System.out.println(retrievedEvaluationAssets.get(0).getAssetName());
+            // Calculate security score for Current Asset and update the DB
+            EvaluationAsset currentAsset = retrievedEvaluationAssets.get(currentAssetIndex);
+            calculateAssetSafetyScore(currentAsset.getAssetName(), currentAsset.getEvaluationID());
+            currentAsset.setAssetSafetyScore(evaluationDAO.getAssetSafetyScore(currentAsset.getEvaluationID(), currentAsset.getAssetName()));
 
-            // No more assets available, handle next action
-            // Close the current scene (preparedness window)
-            Stage stage = (Stage) continueBtn.getScene().getWindow();
-            stage.close();
+            // Clear the selected option from combo box so the user can respond for the next asset
+            comboBox.getSelectionModel().clearSelection();
 
-            // Close Tree view
-            closeTreeViewScene();
+            // Increment current asset index
+            currentAssetIndex++;
+            // Handle navigation to the next retrieved asset
+            if (currentAssetIndex <= retrievedEvaluationAssets.size() - 1) {
+                updateAssetInfo();
+            }
+            else {
+                System.out.println(currentEvaluation.getCriticalSystemName());
+                System.out.println(retrievedEvaluationAssets.size());
+                //System.out.println(retrievedEvaluationAssets.get(0).getAssetName());
 
-            // Calculate System Safety score and pass it to the next controller
-            calculateSystemSafetyScore();
-            systemSafetyScore = evaluationDAO.getSystemSafetyScore(currentAsset.getEvaluationID());
-            System.out.println("System safety score is: " + systemSafetyScore);
+                // No more assets available, handle next action
+                // Close the current scene (preparedness window)
+                Stage stage = (Stage) continueBtn.getScene().getWindow();
+                stage.close();
 
-            // Navigate to Evaluation End Scene/Window
-            try {
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("evaluation-end.fxml"));
-                Parent root = loader.load();
+                // Close Tree view
+                closeTreeViewScene();
 
-                // Get the controller of the Evaluation End
-                EvaluationEndController evaluationEndController = loader.getController();
+                // Calculate System Safety score and pass it to the next controller
+                calculateSystemSafetyScore();
+                systemSafetyScore = evaluationDAO.getSystemSafetyScore(currentAsset.getEvaluationID());
+                currentEvaluation.setEvaluationScore(systemSafetyScore);
+                System.out.println("System safety score is: " + systemSafetyScore);
 
-                // Send data across
-                evaluationEndController.getCurrentEvaluation(currentEvaluation);
-                evaluationEndController.getEvaluationAssets(retrievedEvaluationAssets);
-                evaluationEndController.getSystemSafetyScore(systemSafetyScore);
-                evaluationEndController.getGeneratedTree(attackTreeView);
-                evaluationEndController.getYearFrom(yearFrom);
-                evaluationEndController.getYearTo(yearTo);
-                evaluationEndController.updateProgress(systemSafetyScore);
+                // Navigate to Evaluation End Scene/Window
+                try {
+                    FXMLLoader loader = new FXMLLoader(getClass().getResource("evaluation-end.fxml"));
+                    Parent root = loader.load();
 
-                // Get the current stage from the event source
-                Stage currentStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+                    // Get the controller of the Evaluation End
+                    EvaluationEndController evaluationEndController = loader.getController();
 
-                // Set the scene of the current stage to the Evaluation End
-                currentStage.setScene(new Scene(root));
-                currentStage.setTitle(evaluationEndController.SCENE_TITLE);
+                    // Send data across
+                    evaluationEndController.getCurrentEvaluation(currentEvaluation);
+                    evaluationEndController.getEvaluationAssets(retrievedEvaluationAssets);
+                    evaluationEndController.getSystemSafetyScore(systemSafetyScore);
+                    evaluationEndController.getGeneratedTree(attackTreeView);
+                    evaluationEndController.getYearFrom(yearFrom);
+                    evaluationEndController.getYearTo(yearTo);
+                    evaluationEndController.updateProgress(systemSafetyScore);
+                    evaluationEndController.updateHeading();
 
-                // Show the stage if it's not already showing
-                if (!currentStage.isShowing()) {
-                    currentStage.show();
+                    // Get the current stage from the event source
+                    Stage currentStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+
+                    // Set the scene of the current stage to the Evaluation End
+                    currentStage.setScene(new Scene(root));
+                    currentStage.setTitle(evaluationEndController.SCENE_TITLE);
+
+                    // Show the stage if it's not already showing
+                    if (!currentStage.isShowing()) {
+                        currentStage.show();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    // Handle loading error
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
-                // Handle loading error
             }
         }
     }
@@ -252,10 +261,30 @@ public class PreparednessWindowController {
             for (TreeItem<String> cweNode : cweNodes) {
 
                 // Get the list of Attack Patterns (CAPECs) under the CWE node
-                List<TreeItem<String>> capecNodes = cweNode.getChildren();
+                List<TreeItem<String>> allCapecNodes = cweNode.getChildren();
 
-                // Go through each capec node and add the ones with a likelihood of medium and high
-                numOfLinkedAttackPatterns += capecNodes.size();
+                // Storing CAPECs and CVEs as Sets because they automatically remove duplicates
+                Set<String> uniqueCVEs = new HashSet<>(); // Storing unique CVEs
+                Set<Integer> uniqueAttackPatterns = new HashSet<>(); // Storing unique CAPECs
+
+                // Go through each capec node
+                for (TreeItem<String> capecNode : allCapecNodes) {
+                    // Get the display name and change it to an Attack Pattern object
+                    String capecDisplayName = capecNode.getValue();
+                    AttackPattern attackPattern = AttackPattern.fromStringToAttackPattern(capecDisplayName);
+                    int capecId = attackPattern.getCapecId();
+
+                    // Add CAPEC ID to the set to remove duplicates
+                    uniqueAttackPatterns.add(capecId);
+
+                    // Check likelihood and add to the count if it's high or medium
+                    String likelihood = attackPatternDAO.getAttackLikelihoodFromDB(capecId);
+                    if (likelihood.equalsIgnoreCase("High") || likelihood.equalsIgnoreCase("Medium")) {
+                        uniqueAttackPatterns.add(attackPattern.getCapecId());
+                    }
+                }
+                // Update the count of linked patterns with the size of the set (which automatically removes duplicates)
+                numOfLinkedAttackPatterns += uniqueAttackPatterns.size();
 
                 // Go through CWE, get the score, the total score / number of CWEs to get the score for this section
                 // Get the name of the weakness
@@ -274,28 +303,26 @@ public class PreparednessWindowController {
                 // update the value of averageEPSSTotal with the value fetched from each CVE
                 // CVEs come as a single string with commas (i.e. CVE2024-xx, CVE2023-xx).
                 // Split by commas
-                if (!linkedCVEs.isEmpty())
-                {
+                if (!linkedCVEs.isEmpty()) {
                     String[] cveArray = linkedCVEs.split(",\\s*");
-                    // Initialize variables to track EPSS score calculation
-                    numOfLinkedCVEsToAsset += cveArray.length;
 
                     // Loop through each split CVE and get the EPSS score from the DB
                     for (String cve : cveArray) {
                         // Query the database to retrieve EPSS score for the current CVE
                         double epssScore = icsAssetVulnerabilityDAO.getEPSSForCVE(cve);
-                        // Testing data
-                        System.out.println(cve + " has an EPSS core of: " + epssScore);
                         // Update the total EPSS score
                         averageEPSSTotal += epssScore;
+                        uniqueCVEs.add(cve);
                     }
                 }
+                // Add Unique CVEs
+                numOfLinkedCVEsToAsset += uniqueCVEs.size();
                 // get the average cvss score for each cwe and add them
                 averageCVSSTotal += icsAssetVulnerabilityDAO.getAverageCVSSForCWE(cweId, yearFrom, yearTo);
             }
-            System.out.println("average cvss total for asset" +(currentAssetIndex) + " is: " + averageCVSSTotal);
-            System.out.println("average epss total for asset" +(currentAssetIndex) + " is: " + averageEPSSTotal);
-            System.out.println("asset" +(currentAssetIndex) + " has: " + numOfLinkedCVEsToAsset + " CVEs");
+            System.out.println("average cvss total for asset: " + currentAssetName + " is: " + averageCVSSTotal);
+            System.out.println("average epss total for asset " + currentAssetName + " is: " + averageEPSSTotal);
+            System.out.println("asset " + currentAssetName + " has: " + numOfLinkedCVEsToAsset + " CVEs");
             // divide the total of the averages by the number of CWEs
             Double finalCVSSAverageForAsset = averageCVSSTotal / cweNodes.size();
             System.out.println("final cvss average to categorize for asset: " + currentAssetName + "is: " + finalCVSSAverageForAsset);

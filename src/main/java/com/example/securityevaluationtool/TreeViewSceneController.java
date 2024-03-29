@@ -22,6 +22,10 @@ public class TreeViewSceneController {
 
     public final String SCENE_TITLE = "Tree View Scene";
 
+    // Get the required DAOs to access the DB
+    private final EvaluationDAO evaluationDAO = new EvaluationDAO();
+    private final CommonWeaknessEnumerationDAO commonWeaknessEnumerationDAO = new CommonWeaknessEnumerationDAO();
+
     // Field(s) and method(s) for getting data from previous controller
     private int yearTo;
     private int yearFrom;
@@ -106,6 +110,7 @@ public class TreeViewSceneController {
             AttackPattern selectedAttackPattern = AttackPattern.fromStringToAttackPattern(selectedAttackPatternDisplay);
 
             // Get Mitigations for the selected attack pattern
+            assert selectedAttackPattern != null;
             List<Mitigation> mitigations = selectedAttackPattern.getMitigations();
             // Change list of mitigations to list of strings
             List<String> mitigationsStrings = mitigations.stream()
@@ -177,10 +182,8 @@ public class TreeViewSceneController {
 
         // Get the evalId of the first asset in the evaluation, it will be the same for all evaluation assets
         // We are using this and the assetName of the selected node to query the assetType from the DB
-        // Get an Evaluation DAO to run the query
         int evaluationId = retrievedEvaluationAssets.get(0).getEvaluationID();
         String assetName = selectedItem.getParent().getValue();
-        EvaluationDAO evaluationDAO = new EvaluationDAO();
         String assetType = evaluationDAO.getAssetTypeFromAssetName(evaluationId, assetName);
 
         if (selectedItem != null) {
@@ -191,6 +194,7 @@ public class TreeViewSceneController {
             CommonWeaknessEnumeration selectedWeakness = CommonWeaknessEnumeration.fromStringToCWE(selectedWeaknessDisplay);
 
             // Get Mitigations for the selected attack pattern
+            assert selectedWeakness != null;
             List<WeaknessMitigation> weaknessMitigations = selectedWeakness.getWeaknessMitigations();
             // Change list of mitigations to list of strings
             List<String> mitigationsStrings = weaknessMitigations.stream()
@@ -207,7 +211,6 @@ public class TreeViewSceneController {
             String mitigationsDisplay = sb.toString();
 
             // Fetch CVEs from ICSAssetVulnerability. Make sure it's filtered by the selected years, CweNumber, Asset Type
-            CommonWeaknessEnumerationDAO commonWeaknessEnumerationDAO = new CommonWeaknessEnumerationDAO();
             String linkedCVEs = commonWeaknessEnumerationDAO.getLinkedCVEs(selectedWeakness.getCweId(), assetType, yearFrom, yearTo);
 
             // Printing out values to test
@@ -258,44 +261,54 @@ public class TreeViewSceneController {
         System.out.println("TODO");
     }
 
-    // Open New Window
-    // Based on the mitigations shown throughout the tree (root and its descendants) how prepared are you to prevent this attack?
-    // Can't recall Mitigations? Option to View Mitigations again (just go back to treeView)
-    // Options: Extremely Prepared, Somewhat Prepared, Neither Prepared Nor Unprepared, Somewhat Unprepared, Extremely Unprepared (Make them an Enum and factor them into score calculation)
+    // Opens New Window
     @FXML
     private void onContinueEvaluation(/*ActionEvent event*/) {
-        // close attack and weakness cards
-        closeAllAttackCards();
-        closeAllWeaknessCards();
-        System.out.println(currentEvaluation.getCriticalSystemName());
-        System.out.println(retrievedEvaluationAssets.size());
-        System.out.println(retrievedEvaluationAssets.get(0).getAssetName());
+        // Check if preparedness window is already open.
+        // If it is, bring it into focus
+        Stage preparednessStage = getPreparednessStage();
+        if (preparednessStage != null) {
+            preparednessStage.toFront();
+            // close attack and weakness cards
+            closeAllAttackCards();
+            closeAllWeaknessCards();
+        }
+        // else create a new instance of the preparedness window
+        else {
+            // close attack and weakness cards
+            closeAllAttackCards();
+            closeAllWeaknessCards();
+            System.out.println(currentEvaluation.getCriticalSystemName());
+            System.out.println(retrievedEvaluationAssets.size());
+            System.out.println(retrievedEvaluationAssets.get(0).getAssetName());
 
-        // Navigate to the Tree Prompt Screen
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("preparedness-window.fxml"));
-            Parent root = loader.load();
-            PreparednessWindowController preparednessWindowController = loader.getController();
+            // Navigate to the Tree Prompt Screen
+            try {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("preparedness-window.fxml"));
+                Parent root = loader.load();
+                PreparednessWindowController preparednessWindowController = loader.getController();
 
-            // Pass data unto next scene
-            preparednessWindowController.getCurrentEvaluation(currentEvaluation);
-            preparednessWindowController.getEvaluationAssets(retrievedEvaluationAssets);
-            preparednessWindowController.getGeneratedTree(attackTreeView);
-            preparednessWindowController.getYearFrom(yearFrom);
-            preparednessWindowController.getYearTo(yearTo);
-            preparednessWindowController.initializeWithData();
+                // Pass data unto next scene
+                preparednessWindowController.getCurrentEvaluation(currentEvaluation);
+                preparednessWindowController.getEvaluationAssets(retrievedEvaluationAssets);
+                preparednessWindowController.getGeneratedTree(attackTreeView);
+                preparednessWindowController.getYearFrom(yearFrom);
+                preparednessWindowController.getYearTo(yearTo);
+                preparednessWindowController.initializeWithData();
 
-            Stage stage = new Stage();
-            stage.setScene(new Scene(root));
-            stage.setTitle(preparednessWindowController.SCENE_TITLE);
-            stage.show();
+                Stage stage = new Stage();
+                stage.setScene(new Scene(root));
+                stage.setTitle(preparednessWindowController.SCENE_TITLE);
+                stage.show();
 
-        } catch (IOException e) {
-            e.printStackTrace();
-            // Handle loading error
+            } catch (IOException e) {
+                e.printStackTrace();
+                // Handle loading error
+            }
         }
     }
 
+    // Method to close all attack cards
     private void closeAllAttackCards() {
         // Get a list of all open windows
         List<Window> openWindows = Window.getWindows();
@@ -319,6 +332,7 @@ public class TreeViewSceneController {
         closeAllWindows(cardViewStages);
     }
 
+    // Method to close all open Weakness Cards
     private void closeAllWeaknessCards() {
         // Get a list of all open windows
         List<Window> openWindows = Window.getWindows();
@@ -342,9 +356,28 @@ public class TreeViewSceneController {
         closeAllWindows(cardViewStages);
     }
 
+    // Method to close all open windows
     private void closeAllWindows(List<Stage> stagesToClose) {
         for (Stage stage : stagesToClose) {
             stage.close();
         }
+    }
+
+    // Method to get the preparedness stage if it's already open
+    private Stage getPreparednessStage() {
+        // new Instance of the Preparedness Window controller to check the scene title
+        PreparednessWindowController preparednessWindowController = new PreparednessWindowController();
+        // Iterate through all open stages
+        for (Window window : Window.getWindows()) {
+            if (window instanceof Stage) {
+                Stage stage = (Stage) window;
+                // Check if the stage is the preparedness window
+                if (preparednessWindowController.SCENE_TITLE.equals(stage.getTitle())) {
+                    return stage;
+                }
+            }
+        }
+        // If the preparedness window is not found, return null
+        return null;
     }
 }
