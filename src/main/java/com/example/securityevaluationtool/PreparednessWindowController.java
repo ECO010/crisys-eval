@@ -274,13 +274,10 @@ public class PreparednessWindowController {
                     AttackPattern attackPattern = AttackPattern.fromStringToAttackPattern(capecDisplayName);
                     int capecId = attackPattern.getCapecId();
 
-                    // Add CAPEC ID to the set to remove duplicates
-                    uniqueAttackPatterns.add(capecId);
-
                     // Check likelihood and add to the count if it's high or medium
                     String likelihood = attackPatternDAO.getAttackLikelihoodFromDB(capecId);
                     if (likelihood.equalsIgnoreCase("High") || likelihood.equalsIgnoreCase("Medium")) {
-                        uniqueAttackPatterns.add(attackPattern.getCapecId());
+                        uniqueAttackPatterns.add(capecId);
                     }
                 }
                 // Update the count of linked patterns with the size of the set (which automatically removes duplicates)
@@ -298,11 +295,9 @@ public class PreparednessWindowController {
 
                 // CVEs come as a single string with commas (i.e. CVE2024-xx, CVE2023-xx).
                 // Split by commas
-                // loop through each split CVE and get the EPSS score from the DB (WHERE CVENumber = 'value we get from splitting?')
+                // loop through each split CVE and get the EPSS score from the DB (WHERE CVENumber = 'value we get from splitting')
                 // update the value of total CVEs linked (NumOfLinkedCVEsToAsset)
                 // update the value of averageEPSSTotal with the value fetched from each CVE
-                // CVEs come as a single string with commas (i.e. CVE2024-xx, CVE2023-xx).
-                // Split by commas
                 if (!linkedCVEs.isEmpty()) {
                     String[] cveArray = linkedCVEs.split(",\\s*");
 
@@ -355,8 +350,9 @@ public class PreparednessWindowController {
             // Medium (31 - 50) -> +15
             // High (50+) -> +10
             // Check the number of linked patterns and update the score
-            // If the user selects This Year
             System.out.println("The number of linked attack patterns for " + currentAssetName + " is " + numOfLinkedAttackPatterns);
+
+            // If the user selects This Year
             if (yearTo - yearFrom == 0) {
                 if (numOfLinkedAttackPatterns == 0) {
                     currentAssetSafetyScore += 25;
@@ -448,7 +444,6 @@ public class PreparednessWindowController {
             }
         }
         // Exception case: Assets without CWEs automatically get a safety score of 75 only leaving the 25 to be added from the user's response.
-        // I should probably skip asking the survey question for Assets without CWEs
         else {
             currentAssetSafetyScore += 75;
         }
