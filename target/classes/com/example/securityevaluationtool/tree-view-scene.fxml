@@ -12,6 +12,6 @@
             <Tooltip text="Save this particular tree as a pdf to scrutinize some other time" />
          </tooltip></Button>
       <TreeView id="attackTreeView" fx:id="attackTreeView" layoutX="14.0" layoutY="24.0" prefHeight="389.0" prefWidth="469.0" showRoot="false" />
-      <Button layoutX="494.0" layoutY="194.0" mnemonicParsing="false" onAction="#onContinueEvaluation" text="Continue Evaluation" />
+      <Button fx:id="continueBtn" layoutX="494.0" layoutY="194.0" mnemonicParsing="false" onAction="#onContinueEvaluation" text="Continue Evaluation" />
    </children>
 </AnchorPane>

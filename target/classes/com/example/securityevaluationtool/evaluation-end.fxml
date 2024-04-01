@@ -14,9 +14,9 @@
             <Font size="14.0" />
          </font>
       </Label>
-      <Button layoutX="358.0" layoutY="208.0" mnemonicParsing="false" text="Return To Main Menu" />
+      <Button layoutX="358.0" layoutY="208.0" mnemonicParsing="false" onAction="#onReturnClick" text="Return To Main Menu" />
       <ProgressIndicator fx:id="systemSafetyScoreIndicator" layoutX="30.0" layoutY="71.0" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="248.0" prefWidth="262.0" progress="0.0" />
-      <Button layoutX="358.0" layoutY="134.0" mnemonicParsing="false" text="Download Evaluation Results" />
+      <Button layoutX="358.0" layoutY="134.0" mnemonicParsing="false" onAction="#onDownloadClick" text="Download Evaluation Results" />
       <Text layoutX="62.0" layoutY="354.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Learn How This Score Was Calculated" />
    </children>
 </AnchorPane>
