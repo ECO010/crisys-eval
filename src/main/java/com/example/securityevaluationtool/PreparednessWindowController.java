@@ -16,11 +16,10 @@ import javafx.stage.Window;
 import java.io.IOException;
 import java.util.*;
 
-// TODO: Definitely see how calculations can be quicker (it connects to the DB too many times, look for other ways to improve efficiency)
+// TODO:
 //  ***Save Tree As PDF***
 //  Clean up, package and submit
 //  ***Download Evaluation results as CSV***
-//  Load, delete evaluations
 
 public class PreparednessWindowController {
     public final String SCENE_TITLE = "Preparedness Survey";
@@ -142,7 +141,7 @@ public class PreparednessWindowController {
         }
         // Output the number of mitigations linked to the asset
         System.out.println("Asset Name: " + assetNode.getValue() + ", Mitigations: " + numMitigations);
-        return numMitigations; // Placeholder
+        return numMitigations;
     }
 
     // Should just move window behind tree view not really close
@@ -290,6 +289,9 @@ public class PreparednessWindowController {
                 CommonWeaknessEnumeration cwe = CommonWeaknessEnumeration.fromStringToCWE(cweDisplayName);
                 String cweId = cwe.getCweId();
 
+                // get the average cvss score for each CWE linked to the asset node and add them
+                averageCVSSTotal += icsAssetVulnerabilityDAO.getAverageCVSSForCWE(cweId, yearFrom, yearTo);
+
                 // for each CWE, get the linked CVEs
                 String linkedCVEs = commonWeaknessEnumerationDAO.getLinkedCVEs(cweId, assetType, yearFrom, yearTo);
 
@@ -301,26 +303,23 @@ public class PreparednessWindowController {
                 if (!linkedCVEs.isEmpty()) {
                     String[] cveArray = linkedCVEs.split(",\\s*");
 
-                    // Loop through each split CVE and get the EPSS score from the DB
-                    for (String cve : cveArray) {
-                        // Query the database to retrieve EPSS score for the current CVE
-                        double epssScore = icsAssetVulnerabilityDAO.getEPSSForCVE(cve);
-                        // Update the total EPSS score
-                        averageEPSSTotal += epssScore;
-                        uniqueCVEs.add(cve);
-                    }
+                    // Add CVEs to the Unique CVE set
+                    uniqueCVEs.addAll(Arrays.asList(cveArray));
+
+                    // set the number of linked CVEs
+                    numOfLinkedCVEsToAsset += uniqueCVEs.size();
+
+                    // Query the database to retrieve total EPSS score for CVEs linked to each CWE
+                    averageEPSSTotal = icsAssetVulnerabilityDAO.getTotalEPSSForLinkedCVEs(Arrays.asList(cveArray));
                 }
-                // Add Unique CVEs
-                numOfLinkedCVEsToAsset += uniqueCVEs.size();
-                // get the average cvss score for each cwe and add them
-                averageCVSSTotal += icsAssetVulnerabilityDAO.getAverageCVSSForCWE(cweId, yearFrom, yearTo);
             }
+
             System.out.println("average cvss total for asset: " + currentAssetName + " is: " + averageCVSSTotal);
             System.out.println("average epss total for asset " + currentAssetName + " is: " + averageEPSSTotal);
             System.out.println("asset " + currentAssetName + " has: " + numOfLinkedCVEsToAsset + " CVEs");
             // divide the total of the averages by the number of CWEs
             Double finalCVSSAverageForAsset = averageCVSSTotal / cweNodes.size();
-            System.out.println("final cvss average to categorize for asset: " + currentAssetName + "is: " + finalCVSSAverageForAsset);
+            System.out.println("final cvss average to categorize for asset: " + currentAssetName + " is: " + finalCVSSAverageForAsset);
             // 2nd Category: Average CVSS v3.x specifications score rating (for each CWE linked to the Asset) (out of 30):
             // Critical: 9.0 - 10, asset score: +5
             // High: 7.0 - 8.9, asset score: +10
@@ -426,7 +425,7 @@ public class PreparednessWindowController {
             // Low: 1 - 39, asset score: +20
             // None: < 1, asset score: +25
             Double finalEpssAverageForAsset = averageEPSSTotal / numOfLinkedCVEsToAsset;
-            System.out.println("final epss average to categorize for asset: " + currentAssetName + "is: " + finalEpssAverageForAsset);
+            System.out.println("final epss average to categorize for asset: " + currentAssetName + " is: " + finalEpssAverageForAsset);
             if (finalEpssAverageForAsset < 1) {
                 currentAssetSafetyScore += 25;
             }
@@ -476,43 +475,6 @@ public class PreparednessWindowController {
         // reset the score calculator
         currentAssetSafetyScore = 0;
     }
-
-/*    private int calculateSurveyAnswerScore(String selectedOption) {
-        switch(selectedOption) {
-            case "Not Secure":
-                return 5;
-            case "Slightly Secure":
-                return 10;
-            case "Moderately Secure":
-                return 15;
-            case "Secure":
-                return 20;
-            case "Very Secure":
-                return 25;
-            default:
-                return 0; // Handle invalid options
-        }
-    }
-
-    private double calculateAverageCVSSForAsset(List<TreeItem<String>> cweNodes) {
-        // Code for calculating average CVSS score
-    }
-
-    private int calculateCVSSScoreCategory(double cvssScore) {
-        // Code for categorizing CVSS score
-    }
-
-    private int calculateAttackPatternScore(List<TreeItem<String>> capecNodes) {
-        // Code for calculating attack pattern score
-    }
-
-    private double calculateAverageEPSSForCVEs(String linkedCVEs) {
-        // Code for calculating average EPSS score
-    }
-
-    private int calculateEPSSScoreCategory(double epssScore) {
-        // Code for categorizing EPSS score
-    }*/
 
     private void calculateSystemSafetyScore() {
         // total scores of assets / num of assets

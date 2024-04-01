@@ -51,10 +51,16 @@ public class TreeViewSceneController {
     @FXML
     private TreeView<String> attackTreeView;
 
+    @FXML
+    public Button continueBtn;
+
     // Method to set the root node of the TreeView
-    public void setRootNode(TreeItem<String> rootNode) {
+// Method to set the root node of the TreeView
+    public void setRootNode(TreeItem<String> rootNode, boolean isAttachContextMenu) {
         attackTreeView.setRoot(rootNode);
-        attachContextMenu();
+        if (isAttachContextMenu) {
+            attachContextMenu();
+        }
     }
 
     // Attach context menu to each tree item
@@ -78,14 +84,16 @@ public class TreeViewSceneController {
                         contextMenu.getItems().add(viewCweDetailsItem);
                         viewCweDetailsItem.setOnAction(event -> onViewWeaknessDetails());
                         setContextMenu(contextMenu);
-                    } else if (item.startsWith("CAPEC-")) {
+                    }
+                    else if (item.startsWith("CAPEC-")) {
                         setText(item); // Display CAPEC name
                         ContextMenu contextMenu = new ContextMenu();
                         MenuItem viewDetailsItem = new MenuItem("View Attack Details");
                         contextMenu.getItems().add(viewDetailsItem);
                         viewDetailsItem.setOnAction(event -> onViewAttackDetails());
                         setContextMenu(contextMenu);
-                    } else {
+                    }
+                    else {
                         // Handle other cases if needed
                         setText(item); // Display the value as is
                         setContextMenu(null); // No context menu
@@ -256,6 +264,10 @@ public class TreeViewSceneController {
         }
     }
 
+    // Get Data from The tree view
+    // Need all nodes expanded so the user can see all nodes connected to the asset
+    // Each Asset is a different page
+    // put them in a pdf and save to user's system
     @FXML
     private void onSaveTreeAsPDF() {
         System.out.println("TODO");
@@ -357,7 +369,7 @@ public class TreeViewSceneController {
     }
 
     // Method to close all open windows
-    private void closeAllWindows(List<Stage> stagesToClose) {
+    public void closeAllWindows(List<Stage> stagesToClose) {
         for (Stage stage : stagesToClose) {
             stage.close();
         }

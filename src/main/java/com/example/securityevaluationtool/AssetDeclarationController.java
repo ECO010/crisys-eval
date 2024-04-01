@@ -96,8 +96,10 @@ public class AssetDeclarationController {
         // Add the TextField and ComboBox to the new row
         newRow.getChildren().addAll(assetNameField, assetTypeComboBox);
 
-        mainVBox.getChildren().add(0, newRow); // Add new row at index 0 to add it at the top
+        mainVBox.getChildren().add(newRow);
     }
+
+    // TODO: Add a delete row function
 
     // SET COMBO BOX VALUE AFTER SELECTION
     private void onComboBoxClick(ComboBox<String> comboBox) {

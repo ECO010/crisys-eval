@@ -20,8 +20,9 @@ public class EvaluationStartController {
 
     public final String SCENE_TITLE = "Begin Evaluation";
 
-    private Evaluation evaluation = new Evaluation();
-    private EvaluationDAO evaluationDAO = new EvaluationDAO();
+    // DAOs for fetching Data
+    private final Evaluation evaluation = new Evaluation();
+    private final EvaluationDAO evaluationDAO = new EvaluationDAO();
 
     @FXML
     private TextField systemNameField;
@@ -114,10 +115,6 @@ public class EvaluationStartController {
 
             // Get the controller of the landing scene
             LandingSceneController landingSceneController = loader.getController();
-
-            // Set the landing scene controller as the previous controller
-            // This allows for communication between scenes if needed
-            // landingSceneController.setPreviousController(this);
 
             // Get the current stage from the event source
             Stage currentStage = (Stage) ((Node) event.getSource()).getScene().getWindow();

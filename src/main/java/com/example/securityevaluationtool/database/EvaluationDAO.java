@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class EvaluationDAO {
 
@@ -16,8 +17,14 @@ public class EvaluationDAO {
     private static final String GET_EVALUATIONS = "SELECT * FROM Evaluation";
     private static final String GET_ASSET_SAFETY_SCORE = "SELECT AssetSafetyScore FROM EvaluationAsset WHERE EvaluationID = ? AND AssetName = ?";
     private static final String GET_ASSET_TYPE = "SELECT AssetType FROM EvaluationAsset WHERE EvaluationID = ? AND AssetName = ?";
+    private static final String GET_EVAL_ASSET_DATA = "SELECT EvaluationID, AssetName, AssetType, AssetSafetyScore FROM EvaluationAsset WHERE EvaluationID = ?";
+    private static final String GET_EVAL_DATA = "SELECT * FROM Evaluation WHERE EvaluationID = ?";
+    private static final String GET_ATTACK_TREE_YEAR_FROM = "SELECT YearFrom FROM AttackTreeData WHERE EvaluationID = ?";
+    private static final String GET_ATTACK_TREE_YEAR_TO = "SELECT YearTo FROM AttackTreeData WHERE EvaluationID = ?";
     private static final String UPDATE_ASSET_SCORE = "UPDATE EvaluationAsset SET AssetSafetyScore = ? WHERE AssetName = ? AND EvaluationID = ?";
     private static final String UPDATE_SYSTEM_SCORE = "UPDATE Evaluation SET EvalScore = ? WHERE EvaluationID = ?";
+    private static final String ADD_ATTACK_TREE_DATA = "INSERT OR IGNORE INTO AttackTreeData (EvaluationID, Root, YearFrom, YearTo) VALUES (?, ?, ?, ?)";
+
 
     public void saveEvaluation(Evaluation evaluation) {
         try (Connection connection = DatabaseConnector.connect();
@@ -198,5 +205,152 @@ public class EvaluationDAO {
             // Handle exceptions as needed
         }
         return evaluations;
+    }
+
+    public void deleteEvaluationAssets(List<Integer> evaluationIDs) {
+        String sql = "DELETE FROM EvaluationAsset WHERE EvaluationID IN (" +
+                evaluationIDs.stream().map(Object::toString).collect(Collectors.joining(",")) +
+                ")";
+        try (Connection connection = DatabaseConnector.connect();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Handle exceptions as needed
+        }
+    }
+
+    public void deleteEvaluation(List<Integer> evaluationIDs) {
+        String sql = "DELETE FROM Evaluation WHERE EvaluationID IN (" +
+                evaluationIDs.stream().map(Object::toString).collect(Collectors.joining(",")) +
+                ")";
+        try (Connection connection = DatabaseConnector.connect();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Handle exceptions as needed
+        }
+    }
+
+    public void deleteAttackTreeData(List<Integer> evaluationIDs) {
+        String sql = "DELETE FROM AttackTreeData WHERE EvaluationID IN (" +
+                evaluationIDs.stream().map(Object::toString).collect(Collectors.joining(",")) +
+                ")";
+        try (Connection connection = DatabaseConnector.connect();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Handle exceptions as needed
+        }
+    }
+
+    public Evaluation retrieveEvaluationData(int evaluationID) {
+        Evaluation evaluation = new Evaluation();
+        try (Connection connection = DatabaseConnector.connect();
+             PreparedStatement preparedStatement = connection.prepareStatement(GET_EVAL_DATA)) {
+
+            preparedStatement.setInt(1, evaluationID);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            // Fetch evaluation details
+            while (resultSet.next()) {
+
+                evaluation.setCriticalSystemName(resultSet.getString("SystemName"));
+                evaluation.setEvaluationDate(resultSet.getString("EvalDT"));
+                evaluation.setEvaluationID(resultSet.getInt("EvaluationID"));
+                evaluation.setEvaluationScore(resultSet.getDouble("EvalScore"));
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Handle exceptions as needed
+        }
+        return evaluation;
+    }
+
+    public List<EvaluationAsset> retrieveEvaluationAssetData(int evaluationID) {
+        // Fetch evaluation assets
+        List<EvaluationAsset> evaluationAssets = new ArrayList<>();
+        try (Connection connection = DatabaseConnector.connect();
+             PreparedStatement preparedStatement = connection.prepareStatement(GET_EVAL_ASSET_DATA)) {
+
+            preparedStatement.setInt(1, evaluationID);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next()) {
+                EvaluationAsset evaluationAsset = new EvaluationAsset();
+                evaluationAsset.setAssetType(resultSet.getString("AssetType"));
+                evaluationAsset.setAssetName(resultSet.getString("AssetName"));
+                evaluationAsset.setEvaluationID(resultSet.getInt("EvaluationID"));
+                evaluationAsset.setAssetSafetyScore(resultSet.getInt("AssetSafetyScore"));
+                // Populate other evaluation asset attributes as needed
+                evaluationAssets.add(evaluationAsset);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Handle exceptions as needed
+        }
+        return evaluationAssets;
+    }
+
+    public void saveAttackTreeData(int evaluationID, String root, int yearFrom, int yearTo) {
+        try (Connection connection = DatabaseConnector.connect();
+             PreparedStatement preparedStatement = connection.prepareStatement(ADD_ATTACK_TREE_DATA)) {
+            preparedStatement.setInt(1, evaluationID);
+            preparedStatement.setString(2, root);
+            preparedStatement.setInt(3, yearFrom);
+            preparedStatement.setInt(4, yearTo);
+            preparedStatement.addBatch();
+            preparedStatement.executeBatch();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Handle exceptions as needed
+        }
+    }
+
+    public int getTreeYearFrom(int evaluationID) {
+        int yearFrom = 0;
+        try (Connection connection = DatabaseConnector.connect();
+             PreparedStatement preparedStatement = connection.prepareStatement(GET_ATTACK_TREE_YEAR_FROM)) {
+
+            preparedStatement.setInt(1, evaluationID);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            // Fetch evaluation details
+            while (resultSet.next()) {
+                yearFrom = resultSet.getInt("YearFrom");
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Handle exceptions as needed
+        }
+        return yearFrom;
+    }
+
+    public int getTreeYearTo(int evaluationID) {
+        int yearTo = 0;
+        try (Connection connection = DatabaseConnector.connect();
+             PreparedStatement preparedStatement = connection.prepareStatement(GET_ATTACK_TREE_YEAR_TO)) {
+
+            preparedStatement.setInt(1, evaluationID);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            // Fetch evaluation details
+            while (resultSet.next()) {
+                yearTo = resultSet.getInt("YearTo");
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Handle exceptions as needed
+        }
+        return yearTo;
     }
 }

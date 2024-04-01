@@ -44,6 +44,7 @@ public class TreePromptSceneController {
     // DAO Objects
     private final ICSAssetVulnerabilityDAO icsAssetVulnerabilityDAO = new ICSAssetVulnerabilityDAO();
     private final AttackPatternDAO attackPatternDAO = new AttackPatternDAO();
+    private final EvaluationDAO evaluationDAO = new EvaluationDAO();
 
     // Field(s) and method(s) for getting data from previous controller
     private Evaluation currentEvaluation;
@@ -164,6 +165,10 @@ public class TreePromptSceneController {
             // Generate attack tree and get root node
             TreeItem<String> rootNode = generateAttackTree();
 
+            // save attack tree data to DB, specifically evalID, root node, year from and year to for access later
+            evaluationDAO.saveAttackTreeData(evaluationDAO.getLatestEvalID(), currentEvaluation.getCriticalSystemName(), yearFrom, yearTo);
+
+
             // Navigate to TreeView Scene and display tree
             try {
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("tree-view-scene.fxml"));
@@ -172,7 +177,7 @@ public class TreePromptSceneController {
                 // Get the controller of the tree view scene
                 TreeViewSceneController treeViewSceneController = loader.getController();
 
-                // Send data to the tree view controller, we are using this to fetch linked CVE's according to the users date filter.
+                // Send data to the tree view controller, we are using this to fetch linked CVEs according to the users date filter.
                 treeViewSceneController.getYearFrom(yearFrom);
                 treeViewSceneController.getYearTo(yearTo);
                 //treeViewSceneController.getAssetType(assetType);
@@ -181,7 +186,8 @@ public class TreePromptSceneController {
                 treeViewSceneController.getEvaluationAssets(retrievedEvaluationAssets);
 
                 // Pass the root node of the tree to the tree view controller
-                treeViewSceneController.setRootNode(rootNode);
+                // attach context menu
+                treeViewSceneController.setRootNode(rootNode, true);
 
                 Stage stage = new Stage();
                 stage.setScene(new Scene(root));
