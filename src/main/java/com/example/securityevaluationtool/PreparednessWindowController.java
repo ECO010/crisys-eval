@@ -18,8 +18,7 @@ import java.util.*;
 
 // TODO:
 //  ***Save Tree As PDF***
-//  Clean up, package and submit
-//  ***Download Evaluation results as CSV***
+//  Clean up (get rid of personal info and briefly clean code), package and submit (WARNING: Loading FXML document with JavaFX API of version 21 by JavaFX runtime of version 11.0.1)
 
 public class PreparednessWindowController {
     public final String SCENE_TITLE = "Preparedness Survey";
@@ -198,6 +197,7 @@ public class PreparednessWindowController {
                 calculateSystemSafetyScore();
                 systemSafetyScore = evaluationDAO.getSystemSafetyScore(currentAsset.getEvaluationID());
                 currentEvaluation.setEvaluationScore(systemSafetyScore);
+                currentEvaluation.setEvaluationID(evaluationDAO.getLatestEvalID());
                 System.out.println("System safety score is: " + systemSafetyScore);
 
                 // Navigate to Evaluation End Scene/Window

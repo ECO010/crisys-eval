@@ -160,6 +160,7 @@ public class EvaluationListController {
         ObservableList<Evaluation> selectedEvaluations = evaluationTable.getSelectionModel().getSelectedItems();
         // Retrieve the EvaluationData instance for the selected evaluation
         currentEvaluation = evaluationDAO.retrieveEvaluationData(selectedEvaluation.getEvaluationID());
+        currentEvaluation.setEvaluationID(selectedEvaluation.getEvaluationID());
         retrievedEvaluationAssets = evaluationDAO.retrieveEvaluationAssetData(selectedEvaluation.getEvaluationID());
         yearFrom = evaluationDAO.getTreeYearFrom(selectedEvaluation.getEvaluationID());
         yearTo = evaluationDAO.getTreeYearTo(selectedEvaluation.getEvaluationID());
@@ -173,7 +174,16 @@ public class EvaluationListController {
             alert.setContentText("Please select an evaluation to load.");
             alert.showAndWait();
         }
-        else if (selectedEvaluations.size() == 1) {
+        else if (selectedEvaluations.size() > 1) {
+            // Show an error message indicating no evaluation is selected
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText(null);
+            alert.setContentText("Only one evaluation can be loaded at a time.");
+            alert.showAndWait();
+        }
+        // load both the evaluation end and the tree view of the selected evaluation
+        else {
             // Load the evaluation end scene
             FXMLLoader evalEndLoader = new FXMLLoader(getClass().getResource("evaluation-end.fxml"));
             Parent evalEndRoot = evalEndLoader.load();
@@ -187,7 +197,7 @@ public class EvaluationListController {
             FXMLLoader treeViewLoader = new FXMLLoader(getClass().getResource("tree-view-scene.fxml"));
             Parent treeViewRoot = treeViewLoader.load();
 
-            // Generate attack tree again using saved data
+            // Generate attack tree again using saved data from DB
             TreeItem<String> rootItem = generateAttackTree(yearFrom, yearTo);
 
             TreeViewSceneController treeViewController = treeViewLoader.getController();
@@ -209,15 +219,6 @@ public class EvaluationListController {
 
             // Make continue button invisible on tree view scene, all they can do from here is save as PDF
             treeViewController.continueBtn.setVisible(false);
-        }
-        // load both the evaluation end and the tree view of the selected evaluation
-        else {
-            // Show an error message indicating no evaluation is selected
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Error");
-            alert.setHeaderText(null);
-            alert.setContentText("Only one evaluation can be loaded at a time.");
-            alert.showAndWait();
         }
     }
 

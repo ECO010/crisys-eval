@@ -99,7 +99,23 @@ public class AssetDeclarationController {
         mainVBox.getChildren().add(newRow);
     }
 
-    // TODO: Add a delete row function
+    // remove the row in the last position
+    @FXML
+    private void deleteRow() {
+        int lastIndex = mainVBox.getChildren().size() - 1;
+
+        // If no asset is added, error
+         if (mainVBox.getChildren().isEmpty()) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText(null);
+            alert.setContentText("You cannot delete without adding an asset");
+            alert.showAndWait();
+        }
+         else {
+             mainVBox.getChildren().remove(lastIndex);
+         }
+    }
 
     // SET COMBO BOX VALUE AFTER SELECTION
     private void onComboBoxClick(ComboBox<String> comboBox) {

@@ -19,6 +19,7 @@ public class EvaluationDAO {
     private static final String GET_ASSET_TYPE = "SELECT AssetType FROM EvaluationAsset WHERE EvaluationID = ? AND AssetName = ?";
     private static final String GET_EVAL_ASSET_DATA = "SELECT EvaluationID, AssetName, AssetType, AssetSafetyScore FROM EvaluationAsset WHERE EvaluationID = ?";
     private static final String GET_EVAL_DATA = "SELECT * FROM Evaluation WHERE EvaluationID = ?";
+    private static final String GET_ATTACK_TREE_DATA = "SELECT * FROM AttackTreeData WHERE EvaluationID = ?";
     private static final String GET_ATTACK_TREE_YEAR_FROM = "SELECT YearFrom FROM AttackTreeData WHERE EvaluationID = ?";
     private static final String GET_ATTACK_TREE_YEAR_TO = "SELECT YearTo FROM AttackTreeData WHERE EvaluationID = ?";
     private static final String UPDATE_ASSET_SCORE = "UPDATE EvaluationAsset SET AssetSafetyScore = ? WHERE AssetName = ? AND EvaluationID = ?";
@@ -257,7 +258,6 @@ public class EvaluationDAO {
 
             // Fetch evaluation details
             while (resultSet.next()) {
-
                 evaluation.setCriticalSystemName(resultSet.getString("SystemName"));
                 evaluation.setEvaluationDate(resultSet.getString("EvalDT"));
                 evaluation.setEvaluationID(resultSet.getInt("EvaluationID"));
@@ -287,7 +287,6 @@ public class EvaluationDAO {
                 evaluationAsset.setAssetName(resultSet.getString("AssetName"));
                 evaluationAsset.setEvaluationID(resultSet.getInt("EvaluationID"));
                 evaluationAsset.setAssetSafetyScore(resultSet.getInt("AssetSafetyScore"));
-                // Populate other evaluation asset attributes as needed
                 evaluationAssets.add(evaluationAsset);
             }
         } catch (SQLException e) {
@@ -352,5 +351,29 @@ public class EvaluationDAO {
             // Handle exceptions as needed
         }
         return yearTo;
+    }
+
+    public AttackTreeData retrieveAttackTreeData(int evaluationID) {
+        AttackTreeData attackTreeData = new AttackTreeData();
+        try (Connection connection = DatabaseConnector.connect();
+             PreparedStatement preparedStatement = connection.prepareStatement(GET_ATTACK_TREE_DATA)) {
+
+            preparedStatement.setInt(1, evaluationID);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            // Fetch attack tree details
+            while (resultSet.next()) {
+                attackTreeData.setEvaluationID(resultSet.getInt("EvaluationID"));
+                attackTreeData.setRoot(resultSet.getString("Root"));
+                attackTreeData.setYearFrom(resultSet.getInt("YearFrom"));
+                attackTreeData.setYearTo(resultSet.getInt("YearTo"));
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Handle exceptions as needed
+        }
+        return attackTreeData;
     }
 }

@@ -1,7 +1,9 @@
 package com.example.securityevaluationtool;
 
+import com.example.securityevaluationtool.database.AttackTreeData;
 import com.example.securityevaluationtool.database.Evaluation;
 import com.example.securityevaluationtool.database.EvaluationAsset;
+import com.example.securityevaluationtool.database.EvaluationDAO;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -11,15 +13,21 @@ import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TreeView;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class EvaluationEndController {
     public final String SCENE_TITLE = "Evaluation End";
+
+    private final EvaluationDAO evaluationDAO = new EvaluationDAO();
 
     @FXML
     private ProgressIndicator systemSafetyScoreIndicator;
@@ -68,7 +76,7 @@ public class EvaluationEndController {
     }
 
     public void updateHeading() {
-        evaluationEndHeading.setText("This is the end of the evaluation for " + currentEvaluation.getCriticalSystemName());
+        evaluationEndHeading.setText("This is the evaluation result for: " + currentEvaluation.getCriticalSystemName());
     }
 
     @FXML
@@ -113,10 +121,75 @@ public class EvaluationEndController {
         }
     }
 
-    // Get Data from Evaluation, Evaluation Asset and Attack Tree Data tables
+    // Get Data from Evaluation, Evaluation Asset and Attack Tree Data tables as Strings
     // put them in a csv and save to user's system
     @FXML
     private void onDownloadClick(ActionEvent event) {
-        System.out.println("TODO");
+        // Get the evaluation ID
+        int evaluationID = currentEvaluation.getEvaluationID();
+
+        // Prompt the user to select a directory
+        DirectoryChooser directoryChooser = new DirectoryChooser();
+        directoryChooser.setTitle("Select Directory to Save CSV");
+        File selectedDirectory = directoryChooser.showDialog(((Node) event.getSource()).getScene().getWindow());
+
+        if (selectedDirectory != null) {
+            // Prepare the file path for the CSV file
+            String filePath = selectedDirectory.getAbsolutePath() + "/evaluation_data _for_"+currentEvaluation.getCriticalSystemName()+".csv";
+
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
+                // Get Eval data from DB
+                Evaluation retrievedEval = evaluationDAO.retrieveEvaluationData(evaluationID);
+                retrievedEvaluationAssets = evaluationDAO.retrieveEvaluationAssetData(evaluationID);
+                AttackTreeData retrievedAttackTreeData = evaluationDAO.retrieveAttackTreeData(evaluationID);
+
+                // Convert data into List of strings that I can then loop through
+                List<String> evaluationData = new ArrayList<>();
+                List<String> evaluationAssetData = new ArrayList<>();
+                List<String> attackTreeData = new ArrayList<>();
+
+                // Add evaluation data to the list
+                evaluationData.add("Evaluation ID: " + retrievedEval.getEvaluationID());
+                evaluationData.add("System Name: " + retrievedEval.getCriticalSystemName());
+                evaluationData.add("Evaluation Score: " + retrievedEval.getEvaluationScore());
+                evaluationData.add("Evaluation Date: " + retrievedEval.getEvaluationDate());
+
+                // Add asset data to the list
+                for (EvaluationAsset asset : retrievedEvaluationAssets) {
+                    evaluationAssetData.add("Asset Name: " + asset.getAssetName());
+                    evaluationAssetData.add("Asset Type: " + asset.getAssetType());
+                    evaluationAssetData.add("Asset Safety Score: " + asset.getAssetSafetyScore());
+                }
+
+                // Add attack tree data to the list
+                attackTreeData.add("Attack Tree Root (System Name): " + retrievedAttackTreeData.getRoot());
+                attackTreeData.add("YearFrom: " + retrievedAttackTreeData.getYearFrom());
+                attackTreeData.add("YearTo: " + retrievedAttackTreeData.getYearTo());
+
+                // Write data to the CSV file starting with Evaluation table data
+                writer.write("*** Evaluation Data ***\n");
+                for (String data : evaluationData) {
+                    writer.write(data + "\n");
+                }
+                // Write Evaluation Asset table data
+                writer.write("\n\n*** Evaluation Asset Data ***\n");
+                for (String data : evaluationAssetData) {
+                    writer.write(data + "\n");
+                }
+               // Write Attack tree table data
+                writer.write("\n\n*** Attack Tree Data ***\n");
+                for (String data : attackTreeData) {
+                    writer.write(data + "\n");
+                }
+
+                System.out.println("CSV file saved successfully.");
+            } catch (IOException e) {
+                e.printStackTrace();
+                // Handle the exception
+            }
+        }
+        else {
+            System.out.println("No directory selected.");
+        }
     }
 }

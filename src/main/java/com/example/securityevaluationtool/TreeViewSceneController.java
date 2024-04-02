@@ -55,7 +55,6 @@ public class TreeViewSceneController {
     public Button continueBtn;
 
     // Method to set the root node of the TreeView
-// Method to set the root node of the TreeView
     public void setRootNode(TreeItem<String> rootNode, boolean isAttachContextMenu) {
         attackTreeView.setRoot(rootNode);
         if (isAttachContextMenu) {
