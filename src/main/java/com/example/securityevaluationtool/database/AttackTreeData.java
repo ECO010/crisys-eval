@@ -1,10 +1,17 @@
 package com.example.securityevaluationtool.database;
 
+import java.util.List;
+
 public class AttackTreeData {
     private int evaluationID;
     private String root;
     private int yearFrom;
     private int yearTo;
+    private List<EvaluationAsset> assets;
+    private List<CommonWeaknessEnumeration> linkedCWEs;
+    private List<AttackPattern> linkedCAPECs;
+    private List<String> linkedCVES;
+    private List<String> combinedMitigations;
 
     public int getEvaluationID() {
         return evaluationID;

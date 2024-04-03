@@ -17,7 +17,8 @@ import java.io.IOException;
 import java.util.*;
 
 // TODO:
-//  ***Save Tree As PDF***
+//  Learn how this score was calculated
+//  *** Save Tree Data (Include mitigations as output) ***
 //  Clean up (get rid of personal info and briefly clean code), package and submit (WARNING: Loading FXML document with JavaFX API of version 21 by JavaFX runtime of version 11.0.1)
 
 public class PreparednessWindowController {
@@ -239,10 +240,10 @@ public class PreparednessWindowController {
 
     // Total Asset Safety Score Out of Hundred
     // Split into 4 categories:
-    // Survey Answer (out of 25) -> 1st
-    // Average CVSS Scores (out of 25) -> 2nd
-    // Total number of attack patterns linked to the asset (out of 25) -> 3rd
-    // Average EPSS score for CVEs linked to CWE (out of 25) -> 4th
+    // Survey Answer (out of 10) -> 1st
+    // Average CVSS Scores (out of 30) -> 2nd
+    // Total number of attack patterns linked to the asset (out of 30) -> 3rd
+    // Average EPSS score for CVEs linked to CWE (out of 30) -> 4th
     // (the EPSS score represents the probability [0-1] of exploitation in the wild in the next 30 days (following daily score publication))
     private void calculateAssetSafetyScore(String currentAssetName, int evaluationId) {
         TreeItem<String> assetNode = attackTreeView.getRoot().getChildren().get(currentAssetIndex);
@@ -314,21 +315,18 @@ public class PreparednessWindowController {
                 }
             }
 
+            // TESTING VALUES
             System.out.println("average cvss total for asset: " + currentAssetName + " is: " + averageCVSSTotal);
             System.out.println("average epss total for asset " + currentAssetName + " is: " + averageEPSSTotal);
             System.out.println("asset " + currentAssetName + " has: " + numOfLinkedCVEsToAsset + " CVEs");
             // divide the total of the averages by the number of CWEs
             Double finalCVSSAverageForAsset = averageCVSSTotal / cweNodes.size();
             System.out.println("final cvss average to categorize for asset: " + currentAssetName + " is: " + finalCVSSAverageForAsset);
+
             // 2nd Category: Average CVSS v3.x specifications score rating (for each CWE linked to the Asset) (out of 30):
-            // Critical: 9.0 - 10, asset score: +5
-            // High: 7.0 - 8.9, asset score: +10
-            // Medium: 4.0 - 6.9, asset score: +15
-            // Low: 0.1 - 3.9, asset score: +20
-            // None: 0.0, asset score: +25
             // update security safety score based on the criteria
             if (finalCVSSAverageForAsset == 0.0) {
-                currentAssetSafetyScore += 25;
+                currentAssetSafetyScore += 30;
             }
             else if (finalCVSSAverageForAsset >= 0.01 && finalCVSSAverageForAsset <= 3.9) {
                 currentAssetSafetyScore += 25;
@@ -343,129 +341,78 @@ public class PreparednessWindowController {
                 currentAssetSafetyScore += 10;
             }
 
-            // 3rd Category: Total Number of CAPECs inked to the Asset (Asset attack surface) (out of 25)??
-            // None (0) -> +25
-            // Low (1 - 30) -> +20
-            // Medium (31 - 50) -> +15
-            // High (50+) -> +10
+            // 3rd Category: Total Number of CAPECs inked to the Asset (Asset attack surface) (out of 30)??
             // Check the number of linked patterns and update the score
             System.out.println("The number of linked attack patterns for " + currentAssetName + " is " + numOfLinkedAttackPatterns);
 
-            // If the user selects This Year
-            if (yearTo - yearFrom == 0) {
-                if (numOfLinkedAttackPatterns == 0) {
-                    currentAssetSafetyScore += 25;
-                }
-                else if (numOfLinkedAttackPatterns > 0 && numOfLinkedAttackPatterns <= 50) {
-                    currentAssetSafetyScore += 20;
-                }
-                else if (numOfLinkedAttackPatterns > 50 && numOfLinkedAttackPatterns < 100) {
-                    currentAssetSafetyScore += 15;
-                }
-                else if (numOfLinkedAttackPatterns >= 100) {
-                    currentAssetSafetyScore += 10;
-                }
+            // Multiplier depending on the years to filter selected by the user
+            int multiplier = (yearTo - yearFrom) + 1;
+
+            if (numOfLinkedAttackPatterns == 0) {
+                currentAssetSafetyScore += 30;
             }
-            // If the user selects Last Year
-            else if (yearTo - yearFrom == 1) {
-                int multiplier = 2;
-                if (numOfLinkedAttackPatterns == 0) {
-                    currentAssetSafetyScore += 25;
-                }
-                else if (numOfLinkedAttackPatterns > 0 && numOfLinkedAttackPatterns <= 50 * multiplier) {
-                    currentAssetSafetyScore += 20;
-                }
-                else if (numOfLinkedAttackPatterns > 50 * multiplier && numOfLinkedAttackPatterns < 100 * multiplier) {
-                    currentAssetSafetyScore += 15;
-                }
-                else if (numOfLinkedAttackPatterns >= 100 * multiplier) {
-                    currentAssetSafetyScore += 10;
-                }
+            else if (numOfLinkedAttackPatterns > 0 && numOfLinkedAttackPatterns <= 50 * multiplier) {
+                currentAssetSafetyScore += 25;
             }
-            // If the User Selects Last 5 Years
-            else if (yearTo - yearFrom == 4) {
-                int multiplier = 5;
-                if (numOfLinkedAttackPatterns == 0) {
-                    currentAssetSafetyScore += 25;
-                }
-                else if (numOfLinkedAttackPatterns > 0 && numOfLinkedAttackPatterns <= 50 * multiplier) {
-                    currentAssetSafetyScore += 20;
-                }
-                else if (numOfLinkedAttackPatterns > 50 * multiplier && numOfLinkedAttackPatterns < 100 * multiplier) {
-                    currentAssetSafetyScore += 15;
-                }
-                else if (numOfLinkedAttackPatterns >= 100 * multiplier) {
-                    currentAssetSafetyScore += 10;
-                }
+            else if (numOfLinkedAttackPatterns > 50 * multiplier && numOfLinkedAttackPatterns < 100 * multiplier) {
+                currentAssetSafetyScore += 20;
             }
-            // If the User Selects All Time
-            else if (yearTo - yearFrom > 4) {
-                int multiplier = 10;
-                if (numOfLinkedAttackPatterns == 0) {
-                    currentAssetSafetyScore += 25;
-                }
-                else if (numOfLinkedAttackPatterns > 0 && numOfLinkedAttackPatterns <= 50 * multiplier) {
-                    currentAssetSafetyScore += 20;
-                }
-                else if (numOfLinkedAttackPatterns > 50 * multiplier && numOfLinkedAttackPatterns < 100 * multiplier) {
-                    currentAssetSafetyScore += 15;
-                }
-                else if (numOfLinkedAttackPatterns >= 100 * multiplier) {
-                    currentAssetSafetyScore += 10;
-                }
+            else if (numOfLinkedAttackPatterns >= 100 * multiplier) {
+                currentAssetSafetyScore += 15;
             }
 
             // 4th Category: Average EPSS score for all CVEs linked to CWE in the timeframe selected
             // (the score representing the probability [0-1] of exploitation in the wild in the next 30 days (following score publication))
             // multiply EPSS score by 100 to give a percent rating
             // weighting my score rating similar to CVSS
-            // Very High: 90 - 100, asset score: +5
-            // High: 70 - 89, asset score: +10
-            // Medium: 40 - 69, asset score: +15
-            // Low: 1 - 39, asset score: +20
-            // None: < 1, asset score: +25
+            // Very High: 90 - 100, asset score: +10
+            // High: 70 - 89, asset score: +15
+            // Medium: 40 - 69, asset score: +20
+            // Low: 1 - 39, asset score: +25
+            // None: < 1, asset score: +30
             Double finalEpssAverageForAsset = averageEPSSTotal / numOfLinkedCVEsToAsset;
             System.out.println("final epss average to categorize for asset: " + currentAssetName + " is: " + finalEpssAverageForAsset);
             if (finalEpssAverageForAsset < 1) {
-                currentAssetSafetyScore += 25;
+                currentAssetSafetyScore += 30;
             }
             else if (finalEpssAverageForAsset >= 1 && finalCVSSAverageForAsset < 40) {
-                currentAssetSafetyScore += 20;
+                currentAssetSafetyScore += 25;
             }
             else if (finalEpssAverageForAsset >= 40 && finalCVSSAverageForAsset < 70) {
-                currentAssetSafetyScore += 15;
+                currentAssetSafetyScore += 20;
             }
             else if (finalEpssAverageForAsset >= 70 && finalCVSSAverageForAsset < 90) {
-                currentAssetSafetyScore += 10;
+                currentAssetSafetyScore += 15;
             }
             else if (finalEpssAverageForAsset >= 90 && finalCVSSAverageForAsset < 100) {
-                currentAssetSafetyScore += 5;
+                currentAssetSafetyScore += 10;
             }
         }
-        // Exception case: Assets without CWEs automatically get a safety score of 75 only leaving the 25 to be added from the user's response.
+        // Exception case: Assets without CWEs automatically get a safety score of 90 only leaving the 10 to be added from the user's response.
+        // These are theoretically the safest because they have no linked weaknesses, hence no linked attack patterns and CVE (exploitation examples)
         else {
-            currentAssetSafetyScore += 75;
+            currentAssetSafetyScore += 90;
         }
         // 1st Category: Survey Answer, happens regardless of linked CWEs
         // NOT SECURE
         if (Objects.equals(selectedOption, secureOptionsList.get(0))) {
-            currentAssetSafetyScore += 5;
+            currentAssetSafetyScore += 2;
         }
         // SLIGHTLY SECURE
         else if (Objects.equals(selectedOption, secureOptionsList.get(1))) {
-            currentAssetSafetyScore += 10;
+            currentAssetSafetyScore += 4;
         }
         // MODERATELY SECURE
         else if (Objects.equals(selectedOption, secureOptionsList.get(2))) {
-            currentAssetSafetyScore += 15;
+            currentAssetSafetyScore += 6;
         }
         // SECURE
         else if (Objects.equals(selectedOption, secureOptionsList.get(3))) {
-            currentAssetSafetyScore += 20;
+            currentAssetSafetyScore += 8;
         }
         // VERY SECURE
         else if (Objects.equals(selectedOption, secureOptionsList.get(4))) {
-            currentAssetSafetyScore += 25;
+            currentAssetSafetyScore += 10;
         }
 
         // Scores have been calculated update the DB

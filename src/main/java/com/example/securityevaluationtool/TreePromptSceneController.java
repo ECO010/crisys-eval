@@ -21,7 +21,6 @@ import java.util.*;
  * Explain Attack Trees and this tree generation briefly (tree generation, CWE -> CAPEC -> Mitigations),
  * Explain that it uses CISA ICS Advisory which goes back to 2010
  * Require them to select a filter for the timeframe (years) and then proceed to generate the tree
- * Need EvalId passed across, need way to fetch all assets linked to this evalId, need a way to get all distinct cweIds for each asset based on Asset Type
  * generate tree by fetching:
  * system name for current evalId (root node) -> all assets linked to the evalId -> all distinct CweId's linked to the assets -> all CapecIds linked to the CweId's
  * Navigate to Tree View Screen
@@ -41,7 +40,7 @@ public class TreePromptSceneController {
     private String assetType;
     private String assetName;
 
-    // DAO Objects
+    // DAO Objects for querying DB
     private final ICSAssetVulnerabilityDAO icsAssetVulnerabilityDAO = new ICSAssetVulnerabilityDAO();
     private final AttackPatternDAO attackPatternDAO = new AttackPatternDAO();
     private final EvaluationDAO evaluationDAO = new EvaluationDAO();
@@ -180,8 +179,6 @@ public class TreePromptSceneController {
                 // Send data to the tree view controller, we are using this to fetch linked CVEs according to the users date filter.
                 treeViewSceneController.getYearFrom(yearFrom);
                 treeViewSceneController.getYearTo(yearTo);
-                //treeViewSceneController.getAssetType(assetType);
-                //treeViewSceneController.getAssetName(assetName);
                 treeViewSceneController.getCurrentEvaluation(currentEvaluation);
                 treeViewSceneController.getEvaluationAssets(retrievedEvaluationAssets);
 

@@ -272,7 +272,7 @@ public class TreeViewSceneController {
         System.out.println("TODO");
     }
 
-    // Opens New Window
+    // Opens The survey window if it isn't already open, brings it into focus if it is.
     @FXML
     private void onContinueEvaluation(/*ActionEvent event*/) {
         // Check if preparedness window is already open.

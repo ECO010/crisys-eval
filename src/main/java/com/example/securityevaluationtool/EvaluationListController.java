@@ -150,9 +150,6 @@ public class EvaluationListController {
         }
     }
 
-    // Not sure how I'm going to do this at the moment
-    // I'm thinking retrieve stored instances of only the tree view and the evaluation end
-    // User can then save the PDF or CSV (Excel result)
     @FXML
     private void onLoadClick() throws IOException {
         Evaluation selectedEvaluation = evaluationTable.getSelectionModel().getSelectedItem();
@@ -167,7 +164,6 @@ public class EvaluationListController {
 
         // Can only load one evaluation, error if more than one is selected
         if (selectedEvaluations.isEmpty()) {
-            // Show an error message indicating no evaluation is selected
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error");
             alert.setHeaderText(null);
@@ -175,7 +171,6 @@ public class EvaluationListController {
             alert.showAndWait();
         }
         else if (selectedEvaluations.size() > 1) {
-            // Show an error message indicating no evaluation is selected
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error");
             alert.setHeaderText(null);
@@ -204,6 +199,8 @@ public class EvaluationListController {
 
             // don't attach context menu
             treeViewController.setRootNode(rootItem, false);
+            treeViewController.getYearFrom(yearFrom);
+            treeViewController.getYearTo(yearTo);
 
             // Create a new window for each scene and display them side by side
             Stage evalEndStage = new Stage();

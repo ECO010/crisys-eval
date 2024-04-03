@@ -79,6 +79,14 @@ public class EvaluationEndController {
         evaluationEndHeading.setText("This is the evaluation result for: " + currentEvaluation.getCriticalSystemName());
     }
 
+    // Open up new window which explains how the score was calculated
+    // List the category point ratings
+    // Detail the score for each asset in the evaluation
+    @FXML
+    private void onHyperlinkClick() {
+        System.out.println("TODO");
+    }
+
     @FXML
     private void onReturnClick(ActionEvent event) {
         try {
@@ -121,7 +129,7 @@ public class EvaluationEndController {
         }
     }
 
-    // Get Data from Evaluation, Evaluation Asset and Attack Tree Data tables as Strings
+    // Get Data from Evaluation and Evaluation Asset tables as Strings
     // put them in a csv and save to user's system
     @FXML
     private void onDownloadClick(ActionEvent event) {
@@ -141,12 +149,12 @@ public class EvaluationEndController {
                 // Get Eval data from DB
                 Evaluation retrievedEval = evaluationDAO.retrieveEvaluationData(evaluationID);
                 retrievedEvaluationAssets = evaluationDAO.retrieveEvaluationAssetData(evaluationID);
-                AttackTreeData retrievedAttackTreeData = evaluationDAO.retrieveAttackTreeData(evaluationID);
+                //AttackTreeData retrievedAttackTreeData = evaluationDAO.retrieveAttackTreeData(evaluationID);
 
                 // Convert data into List of strings that I can then loop through
                 List<String> evaluationData = new ArrayList<>();
                 List<String> evaluationAssetData = new ArrayList<>();
-                List<String> attackTreeData = new ArrayList<>();
+                //List<String> attackTreeData = new ArrayList<>();
 
                 // Add evaluation data to the list
                 evaluationData.add("Evaluation ID: " + retrievedEval.getEvaluationID());
@@ -161,10 +169,10 @@ public class EvaluationEndController {
                     evaluationAssetData.add("Asset Safety Score: " + asset.getAssetSafetyScore());
                 }
 
-                // Add attack tree data to the list
+                /*// Add attack tree data to the list
                 attackTreeData.add("Attack Tree Root (System Name): " + retrievedAttackTreeData.getRoot());
                 attackTreeData.add("YearFrom: " + retrievedAttackTreeData.getYearFrom());
-                attackTreeData.add("YearTo: " + retrievedAttackTreeData.getYearTo());
+                attackTreeData.add("YearTo: " + retrievedAttackTreeData.getYearTo());*/
 
                 // Write data to the CSV file starting with Evaluation table data
                 writer.write("*** Evaluation Data ***\n");
@@ -176,11 +184,11 @@ public class EvaluationEndController {
                 for (String data : evaluationAssetData) {
                     writer.write(data + "\n");
                 }
-               // Write Attack tree table data
+               /*// Write Attack tree table data
                 writer.write("\n\n*** Attack Tree Data ***\n");
                 for (String data : attackTreeData) {
                     writer.write(data + "\n");
-                }
+                }*/
 
                 System.out.println("CSV file saved successfully.");
             } catch (IOException e) {

@@ -18,9 +18,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class AssetDeclarationController {
 
@@ -52,7 +50,7 @@ public class AssetDeclarationController {
     @FXML
     private ScrollPane scrollPane;
 
-    // DAOs
+    // DAOs for DB queries
     private final EvaluationDAO evaluationDAO = new EvaluationDAO();
     private final ICSAssetVulnerabilityDAO icsAssetVulnerabilityDAO = new ICSAssetVulnerabilityDAO();
 
@@ -71,6 +69,7 @@ public class AssetDeclarationController {
         scrollPane.setFitToWidth(true);
     }
 
+    // add new row
     @FXML
     private void addRow() {
         HBox newRow = new HBox();
@@ -125,12 +124,9 @@ public class AssetDeclarationController {
         });
     }
 
-    // TODO: Save and insert data into eval and evalAsset tables
     // Check that there are assets actually entered (text field should not be blank and combo box should have a selected value)
-    // Move to a screen that says what's happening next (i.e. tree being generated in the form of a tree view which is a folder like structure.
-    // Once the tree is generated you can save it as a pdf for further review and interact with the tree nodes (attack patterns and weaknesses)
+    // Move to a screen that says what's happening next (i.e. tree being generated in the form of a tree view which is a folder like structure)
     // Confirm that all assets have been added
-    // See if tree can be generated in the background then the user clicks continue to view tree
     @FXML
     private void onContinueClick(ActionEvent event) {
         boolean isAnyFieldEmpty = false;
@@ -191,6 +187,13 @@ public class AssetDeclarationController {
             alert.setContentText("Please add at least one asset to continue with the evaluation.");
             alert.showAndWait();
         }
+        else if (hasDuplicateAssetName(evaluationAssetsToSave)) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText(null);
+            alert.setContentText("You are trying to save assets with the same name. Please enter a different name to differentiate assets");
+            alert.showAndWait();
+        }
         else {
             // Confirm the assets, once we leave this page we can't come back, If they cancel clear assets to be saved until they click continue again
             Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
@@ -235,5 +238,17 @@ public class AssetDeclarationController {
                 evaluationAssetsToSave.clear();
             }
         }
+    }
+
+    // Simple check preventing a duplicate asset name
+    private boolean hasDuplicateAssetName(List<EvaluationAsset> evaluationAssets) {
+        Set<String> assetNames = new HashSet<>();
+        for (EvaluationAsset evaluationAsset: evaluationAssets) {
+            // If the asset name is already in the set, it's a duplicate
+            if (!assetNames.add(evaluationAsset.getAssetName())) {
+                return true;
+            }
+        }
+        return false;
     }
 }
