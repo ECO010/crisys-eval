@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Accordion?>
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane prefHeight="450.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.securityevaluationtool.ScoreExplanationController">
+   <children>
+      <Label layoutX="220.0" layoutY="30.0" text="Score Breakdown">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </Label>
+      <Accordion layoutY="75.0" minHeight="-Infinity" minWidth="-Infinity" prefWidth="600.0">
+        <panes>
+          <TitledPane animated="false" minHeight="-Infinity" minWidth="-Infinity" prefHeight="70.0" text="Overall Safety Score">
+            <content>
+              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                     <children>
+                        <TextArea prefHeight="50.0" prefWidth="600.0" text="Your system's overall safety score is the average score of all assets linked to the system. &#10;i.e. (total safety score / number of assets)" wrapText="true" />
+                     </children>
+                  </AnchorPane>
+            </content>
+          </TitledPane>
+          <TitledPane animated="false" minHeight="-Infinity" minWidth="-Infinity" text="Safety Score of Each Asset">
+            <content>
+              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                     <children>
+                        <TextArea prefHeight="227.0" prefWidth="600.0" text="Your asset's safety score is calculated out of 100, based on four key categories:&#10;&#10;1. Survey Answer (10 points): Your input regarding the asset's safety contributes to its score. This allows you to provide context and insights into its safety.&#10;&#10;2. Average CVSS Scores (30 points): CVSS (Common Vulnerability Scoring System) scores are used to assess the severity of vulnerabilities. The higher the assets average CVSS score, the lower the asset's safety score.&#10;&#10;3. Total Number of Linked Attack Patterns (30 points): The more high likelihood attack patterns linked to the asset, the higher its risk. This category evaluates the asset's exposure to known attack patterns, impacting its safety score accordingly.&#10;&#10;4. Average EPSS Score for Linked CVEs (30 points): EPSS (Exploit Prediction Scoring System) scores represent the probability of exploitation in the wild in the next 30 days. A higher EPSS score indicates a higher risk of exploitation, resulting in a lower safety score for the asset.&#10;&#10;Exception Case: Assets without any linked CWEs (Common Weakness Enumerations) are automatically assigned a safety score of 90. This is because they have no linked weaknesses, attack patterns, or CVEs, making them theoretically safer than assets with vulnerabilities.&#10;&#10;By considering these four categories, you can gain a comprehensive understanding of your asset's safety level, helping you prioritize security measures and mitigate potential risks effectively." wrapText="true" />
+                     </children>
+                  </AnchorPane>
+            </content>
+          </TitledPane>
+        </panes>
+      </Accordion>
+      <Hyperlink layoutX="14.0" layoutY="394.0" onAction="#onTreeViewHyperlinkClick" text="To view and download the attack tree data, click HERE to navigate to the tree view window" />
+      <Hyperlink layoutX="14.0" layoutY="359.0" onAction="#onEvalOverviewHyperlinkClick" text="To view and download evaluation data, click HERE to navigate to the evaluation overview window " />
+   </children>
+</AnchorPane>

@@ -118,7 +118,7 @@ public class EvaluationListController {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error");
             alert.setHeaderText(null);
-            alert.setContentText("Please select evaluations to delete.");
+            alert.setContentText("Please select evaluation(s) to delete.");
             alert.showAndWait();
         }
     }
@@ -162,60 +162,64 @@ public class EvaluationListController {
         yearFrom = evaluationDAO.getTreeYearFrom(selectedEvaluation.getEvaluationID());
         yearTo = evaluationDAO.getTreeYearTo(selectedEvaluation.getEvaluationID());
 
-        // Can only load one evaluation, error if more than one is selected
-        if (selectedEvaluations.isEmpty()) {
+        // Check there is an evaluation selected
+        if (!selectedEvaluations.isEmpty()) {
+            if (selectedEvaluations.size() == 1) {
+                // Load the evaluation end scene
+                FXMLLoader evalEndLoader = new FXMLLoader(getClass().getResource("evaluation-end.fxml"));
+                Parent evalEndRoot = evalEndLoader.load();
+                EvaluationEndController evalEndController = evalEndLoader.getController();
+                evalEndController.getCurrentEvaluation(currentEvaluation);
+                evalEndController.getSystemSafetyScore(currentEvaluation.getEvaluationScore());
+                evalEndController.updateProgress(currentEvaluation.getEvaluationScore());
+                evalEndController.updateHeading();
+
+                // Load the tree view scene
+                FXMLLoader treeViewLoader = new FXMLLoader(getClass().getResource("tree-view-scene.fxml"));
+                Parent treeViewRoot = treeViewLoader.load();
+
+                // Generate attack tree again using saved data from DB
+                TreeItem<String> rootItem = generateAttackTree(yearFrom, yearTo);
+
+                TreeViewSceneController treeViewController = treeViewLoader.getController();
+
+                // don't attach context menu
+                treeViewController.setRootNode(rootItem, false);
+                treeViewController.getYearFrom(yearFrom);
+                treeViewController.getYearTo(yearTo);
+
+                // Create a new window for each scene and display them side by side
+                Stage evalEndStage = new Stage();
+                evalEndStage.setTitle(evalEndController.SCENE_TITLE);
+                evalEndStage.setScene(new Scene(evalEndRoot));
+                evalEndStage.show();
+
+                Stage treeViewStage = new Stage();
+                treeViewStage.setTitle(treeViewController.SCENE_TITLE);
+                treeViewStage.setScene(new Scene(treeViewRoot));
+                treeViewStage.show();
+                treeViewStage.toBack();
+
+                // Make continue button invisible on tree view scene, all they can do from here is save as PDF
+                treeViewController.continueBtn.setVisible(false);
+            }
+            // Can only load one evaluation, error if more than one is selected
+            else {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Error");
+                alert.setHeaderText(null);
+                alert.setContentText("Only one evaluation can be loaded at a time.");
+                alert.showAndWait();
+            }
+
+        }
+        // load both the evaluation end and the tree view of the selected evaluation
+        else {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error");
             alert.setHeaderText(null);
             alert.setContentText("Please select an evaluation to load.");
             alert.showAndWait();
-        }
-        else if (selectedEvaluations.size() > 1) {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Error");
-            alert.setHeaderText(null);
-            alert.setContentText("Only one evaluation can be loaded at a time.");
-            alert.showAndWait();
-        }
-        // load both the evaluation end and the tree view of the selected evaluation
-        else {
-            // Load the evaluation end scene
-            FXMLLoader evalEndLoader = new FXMLLoader(getClass().getResource("evaluation-end.fxml"));
-            Parent evalEndRoot = evalEndLoader.load();
-            EvaluationEndController evalEndController = evalEndLoader.getController();
-            evalEndController.getCurrentEvaluation(currentEvaluation);
-            evalEndController.getSystemSafetyScore(currentEvaluation.getEvaluationScore());
-            evalEndController.updateProgress(currentEvaluation.getEvaluationScore());
-            evalEndController.updateHeading();
-
-            // Load the tree view scene
-            FXMLLoader treeViewLoader = new FXMLLoader(getClass().getResource("tree-view-scene.fxml"));
-            Parent treeViewRoot = treeViewLoader.load();
-
-            // Generate attack tree again using saved data from DB
-            TreeItem<String> rootItem = generateAttackTree(yearFrom, yearTo);
-
-            TreeViewSceneController treeViewController = treeViewLoader.getController();
-
-            // don't attach context menu
-            treeViewController.setRootNode(rootItem, false);
-            treeViewController.getYearFrom(yearFrom);
-            treeViewController.getYearTo(yearTo);
-
-            // Create a new window for each scene and display them side by side
-            Stage evalEndStage = new Stage();
-            evalEndStage.setTitle(evalEndController.SCENE_TITLE);
-            evalEndStage.setScene(new Scene(evalEndRoot));
-            evalEndStage.show();
-
-            Stage treeViewStage = new Stage();
-            treeViewStage.setTitle(treeViewController.SCENE_TITLE);
-            treeViewStage.setScene(new Scene(treeViewRoot));
-            treeViewStage.show();
-            treeViewStage.toBack();
-
-            // Make continue button invisible on tree view scene, all they can do from here is save as PDF
-            treeViewController.continueBtn.setVisible(false);
         }
     }
 

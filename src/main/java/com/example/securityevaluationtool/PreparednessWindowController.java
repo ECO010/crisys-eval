@@ -17,7 +17,6 @@ import java.io.IOException;
 import java.util.*;
 
 // TODO:
-//  Learn how this score was calculated
 //  *** Save Tree Data (Include mitigations as output) ***
 //  Clean up (get rid of personal info and briefly clean code), package and submit (WARNING: Loading FXML document with JavaFX API of version 21 by JavaFX runtime of version 11.0.1)
 
@@ -44,7 +43,6 @@ public class PreparednessWindowController {
 
     private String selectedOption;
     private double systemSafetyScore;
-
     List<String> secureOptionsList = new ArrayList<>(Arrays.asList("Not Secure", "Slightly Secure", "Moderately Secure", "Secure", "Very Secure"));
 
     // Field(s) and method(s) for getting data from previous controller
@@ -105,6 +103,7 @@ public class PreparednessWindowController {
         }
     }
 
+    // Get the number of potential mitigations for all CWEs and CAPECs linked to the asset
     private int getNumOfMitigations() {
         // Use the attackTreeView to count the number of mitigations for the specified asset
         // Implement logic to traverse the tree and count mitigations
@@ -144,12 +143,11 @@ public class PreparednessWindowController {
         return numMitigations;
     }
 
-    // Should just move window behind tree view not really close
-    // Bring treeView into focus
+    // Should just bring treeView into focus
+    // Bring the tree view stage to the front by moving this one to the back
     @FXML
     private void onBackClick() {
         Stage stage = (Stage) backToTreeViewBtn.getScene().getWindow();
-        // Bring the tree view stage to the front by moving this one to the back
         stage.toBack();
     }
 
@@ -341,7 +339,7 @@ public class PreparednessWindowController {
                 currentAssetSafetyScore += 10;
             }
 
-            // 3rd Category: Total Number of CAPECs inked to the Asset (Asset attack surface) (out of 30)??
+            // 3rd Category: Total Number of high and medium likelihood CAPECs linked to the Asset (Asset attack surface) (out of 30)??
             // Check the number of linked patterns and update the score
             System.out.println("The number of linked attack patterns for " + currentAssetName + " is " + numOfLinkedAttackPatterns);
 
@@ -389,7 +387,7 @@ public class PreparednessWindowController {
             }
         }
         // Exception case: Assets without CWEs automatically get a safety score of 90 only leaving the 10 to be added from the user's response.
-        // These are theoretically the safest because they have no linked weaknesses, hence no linked attack patterns and CVE (exploitation examples)
+        // These are theoretically the safest because they have no linked weaknesses, hence no linked attack patterns and CVEs (exploitation examples)
         else {
             currentAssetSafetyScore += 90;
         }
@@ -423,9 +421,9 @@ public class PreparednessWindowController {
         currentAssetSafetyScore = 0;
     }
 
+    // total scores of assets / num of assets
+    // update using the eval ID of the 1st asset as it will be the same for all.
     private void calculateSystemSafetyScore() {
-        // total scores of assets / num of assets
-        // get eval ID of the 1st asset as it will be the same for all.
         evaluationDAO.updateSystemSafetyScore(retrievedEvaluationAssets.get(0).getEvaluationID());
     }
 

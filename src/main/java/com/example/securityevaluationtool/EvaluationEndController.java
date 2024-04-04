@@ -82,9 +82,27 @@ public class EvaluationEndController {
     // Open up new window which explains how the score was calculated
     // List the category point ratings
     // Detail the score for each asset in the evaluation
+    // Don't want it to close any window it's doing that at the moment (that's because I would like to navigate to those same windows by clicking a hyperlink_)
     @FXML
     private void onHyperlinkClick() {
-        System.out.println("TODO");
+        // Navigate to Score Breakdown Scene/Window
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("score-explanation.fxml"));
+            Parent root = loader.load();
+
+            // Get the controller of the Score Breakdown
+            ScoreExplanationController scoreExplanationController = loader.getController();
+
+            // Create a new stage for the Score Explanation window
+            Stage scoreExplanationStage = new Stage();
+            scoreExplanationStage.setScene(new Scene(root));
+            scoreExplanationStage.setTitle(scoreExplanationController.SCENE_TITLE);
+
+            scoreExplanationStage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+            // Handle loading error
+        }
     }
 
     @FXML
@@ -106,9 +124,7 @@ public class EvaluationEndController {
             for (Window window : openWindows) {
                 if (window instanceof Stage) {
                     Stage stage = (Stage) window;
-                    //if (stage.getTitle().equals(weaknessNodeCardController.SCENE_TITLE)) {
-                        stagesToClose.add(stage);
-                    //}
+                    stagesToClose.add(stage);
                 }
             }
             treeViewSceneController.closeAllWindows(stagesToClose);
@@ -143,7 +159,7 @@ public class EvaluationEndController {
 
         if (selectedDirectory != null) {
             // Prepare the file path for the CSV file
-            String filePath = selectedDirectory.getAbsolutePath() + "/evaluation_data _for_"+currentEvaluation.getCriticalSystemName()+".csv";
+            String filePath = selectedDirectory.getAbsolutePath() + "/Evaluation Data For "+currentEvaluation.getCriticalSystemName()+".csv";
 
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
                 // Get Eval data from DB

@@ -1,8 +1,10 @@
 package com.example.securityevaluationtool;
 
 import com.example.securityevaluationtool.database.*;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -53,6 +55,9 @@ public class TreeViewSceneController {
 
     @FXML
     public Button continueBtn;
+
+    @FXML
+    public Button returnBtn;
 
     // Method to set the root node of the TreeView
     public void setRootNode(TreeItem<String> rootNode, boolean isAttachContextMenu) {
@@ -270,6 +275,46 @@ public class TreeViewSceneController {
     @FXML
     private void onSaveTreeAsPDF() {
         System.out.println("TODO");
+    }
+
+    @FXML
+    private void onReturnClick(ActionEvent event) {
+        try {
+            // Load the FXML file of the landing scene
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("landing-scene.fxml"));
+            Parent root = loader.load();
+
+            // Get the controller of the landing scene
+            LandingSceneController landingSceneController = loader.getController();
+
+            // Get a list of all open windows
+            List<Window> openWindows = Window.getWindows();
+
+            // List of Card windows
+            List<Stage> stagesToClose = new ArrayList<>();
+            // Iterate through the open windows and close all open windows
+            for (Window window : openWindows) {
+                if (window instanceof Stage) {
+                    Stage stage = (Stage) window;
+                    stagesToClose.add(stage);
+                }
+            }
+            closeAllWindows(stagesToClose);
+            // Get the current stage from the event source
+            Stage currentStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+
+            // Set the scene of the current stage to the landing scene
+            currentStage.setScene(new Scene(root));
+            currentStage.setTitle(landingSceneController.SCENE_TITLE);
+
+            // Show the stage if it's not already showing
+            if (!currentStage.isShowing()) {
+                currentStage.show();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            // Handle loading error
+        }
     }
 
     // Opens The survey window if it isn't already open, brings it into focus if it is.

@@ -6,7 +6,7 @@
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="700.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.securityevaluationtool.IcsaDatabaseViewController">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="700.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/11" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.securityevaluationtool.IcsaDatabaseViewController">
    <children>
       <ComboBox fx:id="cvssSeverityComboBox" layoutX="41.0" layoutY="109.0" onAction="#onSeverityComboClick" prefHeight="25.0" prefWidth="169.0" promptText="Filter by CVSS Severity" />
       <TableView fx:id="table" layoutY="165.0" prefHeight="465.0" prefWidth="1000.0">

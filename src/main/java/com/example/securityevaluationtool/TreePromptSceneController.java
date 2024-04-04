@@ -100,6 +100,7 @@ public class TreePromptSceneController {
     // Immediate children: All assets linked to the evaluation (display will be asset name) -> Object EvaluationAsset
     // Children of immediate children: for each asset, the linked CWEs Object CWE (display will be CWE-ID) -> Object CWE
     // Children of children: for each CWE, get the related attack patterns (display will be the name of attack Pattern and CAPEC-ID) -> Object AttackPattern
+    // Add info to Attack Tree Data tables (Attack Tree assets, linked CAPECs, linked CVEs, linked CWEs, linked Mitigations -> specify what the mitigation tackles
     private TreeItem<String> generateAttackTree() {
         // Root of the tree, the evaluated system name. Is hidden on the tree view
         TreeItem<String> rootItem = new TreeItem<>(currentEvaluation.getCriticalSystemName());
@@ -113,7 +114,7 @@ public class TreePromptSceneController {
             TreeItem<String> assetItem = new TreeItem<>(assetName);
             rootItem.getChildren().add(assetItem);
 
-            // Get distinct CWE's related to the asset type and users year selection
+            // Get distinct CWEs related to the asset type and users year selection
             List<String> fetchedCWEs = icsAssetVulnerabilityDAO.getDistinctCweIdsBasedOnYearAndAssetType(assetType, yearFrom, yearTo);
 
             // use distinct CWE strings to fetch list of CWE Objects
@@ -122,7 +123,6 @@ public class TreePromptSceneController {
             // Go through each weakness and add it as a child to the assetItem if there is a CWE linked
             if (!assetWeaknesses.isEmpty()) {
 
-                // To string method displays CweId alone (could change it up later)
                 for (CommonWeaknessEnumeration weaknessEnumeration: assetWeaknesses) {
                     TreeItem<String> cweItem = new TreeItem<>(weaknessEnumeration.toString());
                     assetItem.getChildren().add(cweItem);
@@ -132,6 +132,8 @@ public class TreePromptSceneController {
 
                     // Get list of attack pattern objects from capec Ids
                     List<AttackPattern> relatedAttackPatterns = attackPatternDAO.getAttackPatternsFromIds(relatedCapecIds);
+
+                    // Get Linked CVEs somewhere here so all relevant attack tree data can be saved in this class.
 
                     // Loop through list of related attack patterns and add each one as a child to the relevant cwe Item if it isn't empty
                     if (!relatedAttackPatterns.isEmpty()) {
@@ -181,6 +183,9 @@ public class TreePromptSceneController {
                 treeViewSceneController.getYearTo(yearTo);
                 treeViewSceneController.getCurrentEvaluation(currentEvaluation);
                 treeViewSceneController.getEvaluationAssets(retrievedEvaluationAssets);
+
+                // Make return button false from Tree Prompt Navigation
+                treeViewSceneController.returnBtn.setVisible(false);
 
                 // Pass the root node of the tree to the tree view controller
                 // attach context menu

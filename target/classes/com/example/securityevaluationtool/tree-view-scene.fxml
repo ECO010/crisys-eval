@@ -5,7 +5,7 @@
 <?import javafx.scene.control.TreeView?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="480.0" prefWidth="640.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.securityevaluationtool.TreeViewSceneController">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="480.0" prefWidth="640.0" xmlns="http://javafx.com/javafx/11" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.securityevaluationtool.TreeViewSceneController">
    <children>
       <Button layoutX="494.0" layoutY="122.0" mnemonicParsing="false" onAction="#onSaveTreeAsPDF" text="Save Tree As PDF">
          <tooltip>
@@ -13,5 +13,6 @@
          </tooltip></Button>
       <TreeView id="attackTreeView" fx:id="attackTreeView" layoutX="14.0" layoutY="24.0" prefHeight="389.0" prefWidth="469.0" showRoot="false" />
       <Button fx:id="continueBtn" layoutX="494.0" layoutY="194.0" mnemonicParsing="false" onAction="#onContinueEvaluation" text="Continue Evaluation" />
+      <Button fx:id="returnBtn" layoutX="494.0" layoutY="194.0" mnemonicParsing="false" onAction="#onReturnClick" text="Return To Main Menu" />
    </children>
 </AnchorPane>
