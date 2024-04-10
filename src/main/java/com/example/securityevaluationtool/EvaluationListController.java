@@ -53,6 +53,7 @@ public class EvaluationListController {
     // DAO Objects
     private final ICSAssetVulnerabilityDAO icsAssetVulnerabilityDAO = new ICSAssetVulnerabilityDAO();
     private final AttackPatternDAO attackPatternDAO = new AttackPatternDAO();
+    private final AttackStepDAO attackStepDAO = new AttackStepDAO();
 
     @FXML
     private void initialize() {
@@ -179,7 +180,7 @@ public class EvaluationListController {
                 Parent treeViewRoot = treeViewLoader.load();
 
                 // Generate attack tree again using saved data from DB
-                TreeItem<String> rootItem = generateAttackTree(yearFrom, yearTo);
+                TreeItem<String> rootItem = generateAttackTree(currentEvaluation, retrievedEvaluationAssets, yearFrom, yearTo);
 
                 TreeViewSceneController treeViewController = treeViewLoader.getController();
 
@@ -197,8 +198,11 @@ public class EvaluationListController {
                 Stage treeViewStage = new Stage();
                 treeViewStage.setTitle(treeViewController.SCENE_TITLE);
                 treeViewStage.setScene(new Scene(treeViewRoot));
-                treeViewStage.show();
+                //treeViewStage.show();
                 treeViewStage.toBack();
+
+                DataManager.getInstance().addOpenStage(treeViewStage);
+                DataManager.getInstance().addOpenStage(evalEndStage);
 
                 // Make continue button invisible on tree view scene, all they can do from here is save as PDF
                 treeViewController.continueBtn.setVisible(false);
@@ -224,12 +228,12 @@ public class EvaluationListController {
     }
 
     // Ended up having to generate the tree again
-    private TreeItem<String> generateAttackTree(int yearFrom, int yearTo) {
+    public TreeItem<String> generateAttackTree(Evaluation currentEvaluation, List<EvaluationAsset> evaluationAssets, int yearFrom, int yearTo) {
         // Root of the tree, the evaluated system name. Is hidden on the tree view
         TreeItem<String> rootItem = new TreeItem<>(currentEvaluation.getCriticalSystemName());
 
         // Go through evaluation assets passed from previous scene and get the asset type and the asset name
-        for (EvaluationAsset evaluationAsset : retrievedEvaluationAssets) {
+        for (EvaluationAsset evaluationAsset : evaluationAssets) {
             assetType = evaluationAsset.getAssetType();
             assetName = evaluationAsset.getAssetName();
 
@@ -251,6 +255,16 @@ public class EvaluationListController {
                     TreeItem<String> cweItem = new TreeItem<>(weaknessEnumeration.toString());
                     assetItem.getChildren().add(cweItem);
 
+                    // This is a list of mitigations to be added as a child to the CWE
+                    List<WeaknessMitigation> cweMitigations = weaknessEnumeration.getWeaknessMitigations();
+                    if (!cweMitigations.isEmpty()) {
+                        for (WeaknessMitigation cweMitigation :
+                                cweMitigations) {
+                            TreeItem<String> mitigationItem = new TreeItem<>(cweMitigation.toString());
+                            cweItem.getChildren().add(mitigationItem);
+                        }
+                    }
+
                     // Get the list of CapecIds from the CWE Item
                     List<Integer> relatedCapecIds = attackPatternDAO.getCapecIdsFromCwe(weaknessEnumeration.getCweId());
 
@@ -262,6 +276,35 @@ public class EvaluationListController {
                         for (AttackPattern attackPattern : relatedAttackPatterns) {
                             TreeItem<String> attackPatternItem = new TreeItem<>(attackPattern.toString());
                             cweItem.getChildren().add(attackPatternItem);
+
+                            // This is a list of mitigations to be added as a child to the CWE
+                            List<Mitigation> capecMitigations = attackPattern.getMitigations();
+                            if (!capecMitigations.isEmpty()) {
+                                for (Mitigation capecMitigation :
+                                        capecMitigations) {
+                                    TreeItem<String> mitigationItem = new TreeItem<>(capecMitigation.toString());
+                                    attackPatternItem.getChildren().add(mitigationItem);
+                                }
+                            }
+
+                            // Get the execution flow for each attack
+                            List<AttackStep> attackSteps = attackStepDAO.getAttackSteps(attackPattern.getCapecId());
+
+                            if (!attackSteps.isEmpty()) {
+                                for (AttackStep attackStep: attackSteps) {
+                                    TreeItem<String> attackStepItem = new TreeItem<>(attackStep.toString());
+                                    attackPatternItem.getChildren().add(attackStepItem);
+
+                                    // Get the step techniques for each step
+                                    List<AttackStepTechnique> stepTechniques = attackStepDAO.getAttackStepTechniques(attackPattern.getCapecId(), attackStep.getStep());
+                                    if (!stepTechniques.isEmpty()) {
+                                        for (AttackStepTechnique stepTechnique: stepTechniques) {
+                                            TreeItem<String> attackStepTechniqueItem = new TreeItem<>(stepTechnique.toString());
+                                            attackStepItem.getChildren().add(attackStepTechniqueItem);
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }

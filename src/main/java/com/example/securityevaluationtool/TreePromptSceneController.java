@@ -26,6 +26,8 @@ import java.util.*;
  * Navigate to Tree View Screen
  */
 
+// TODO: Closing the main menu window should have a pop-up confirming if the user wants to exit the application
+
 public class TreePromptSceneController {
 
     public final String SCENE_TITLE = "Tree Prompt Scene";
@@ -44,6 +46,7 @@ public class TreePromptSceneController {
     private final ICSAssetVulnerabilityDAO icsAssetVulnerabilityDAO = new ICSAssetVulnerabilityDAO();
     private final AttackPatternDAO attackPatternDAO = new AttackPatternDAO();
     private final EvaluationDAO evaluationDAO = new EvaluationDAO();
+    private final AttackStepDAO attackStepDAO = new AttackStepDAO();
 
     // Field(s) and method(s) for getting data from previous controller
     private Evaluation currentEvaluation;
@@ -94,6 +97,9 @@ public class TreePromptSceneController {
             System.out.println(yearFrom);
             System.out.println(yearTo);
         }
+        // Save Year data after user has selected
+        DataManager.getInstance().setAttackTreeYearFrom(yearFrom);
+        DataManager.getInstance().setAttackTreeYearTo(yearTo);
     }
 
     // Root Node: The current evaluation (Display the criticalSystem Name) -> Object Evaluation
@@ -101,9 +107,12 @@ public class TreePromptSceneController {
     // Children of immediate children: for each asset, the linked CWEs Object CWE (display will be CWE-ID) -> Object CWE
     // Children of children: for each CWE, get the related attack patterns (display will be the name of attack Pattern and CAPEC-ID) -> Object AttackPattern
     // Add info to Attack Tree Data tables (Attack Tree assets, linked CAPECs, linked CVEs, linked CWEs, linked Mitigations -> specify what the mitigation tackles
-    private TreeItem<String> generateAttackTree() {
+    public TreeItem<String> generateAttackTree() {
         // Root of the tree, the evaluated system name. Is hidden on the tree view
         TreeItem<String> rootItem = new TreeItem<>(currentEvaluation.getCriticalSystemName());
+
+        // save attack tree data to DB, specifically evalID, root node, year from and year to for access later
+        evaluationDAO.saveAttackTreeData(evaluationDAO.getLatestEvalID(), currentEvaluation.getCriticalSystemName(), yearFrom, yearTo);
 
         // Go through evaluation assets passed from previous scene and get the asset type and the asset name
         for (EvaluationAsset evaluationAsset : retrievedEvaluationAssets) {
@@ -126,6 +135,15 @@ public class TreePromptSceneController {
                 for (CommonWeaknessEnumeration weaknessEnumeration: assetWeaknesses) {
                     TreeItem<String> cweItem = new TreeItem<>(weaknessEnumeration.toString());
                     assetItem.getChildren().add(cweItem);
+                    // This is a list of mitigations to be added as a child to the CWE
+                    List<WeaknessMitigation> cweMitigations = weaknessEnumeration.getWeaknessMitigations();
+                    if (!cweMitigations.isEmpty()) {
+                        for (WeaknessMitigation cweMitigation :
+                                cweMitigations) {
+                            TreeItem<String> mitigationItem = new TreeItem<>(cweMitigation.toString());
+                            cweItem.getChildren().add(mitigationItem);
+                        }
+                    }
 
                     // Get the list of CapecIds from the CWE Item
                     List<Integer> relatedCapecIds = attackPatternDAO.getCapecIdsFromCwe(weaknessEnumeration.getCweId());
@@ -138,8 +156,37 @@ public class TreePromptSceneController {
                     // Loop through list of related attack patterns and add each one as a child to the relevant cwe Item if it isn't empty
                     if (!relatedAttackPatterns.isEmpty()) {
                         for (AttackPattern attackPattern : relatedAttackPatterns) {
+
                             TreeItem<String> attackPatternItem = new TreeItem<>(attackPattern.toString());
                             cweItem.getChildren().add(attackPatternItem);
+
+                            // This is a list of mitigations to be added as a child to the CAPEC
+                            List<Mitigation> capecMitigations = attackPattern.getMitigations();
+                            if (!capecMitigations.isEmpty()) {
+                                for (Mitigation capecMitigation : capecMitigations) {
+                                    TreeItem<String> mitigationItem = new TreeItem<>(capecMitigation.toString());
+                                    attackPatternItem.getChildren().add(mitigationItem);
+                                }
+                            }
+
+                            // Get the execution flow for each attack
+                            List<AttackStep> attackSteps = attackStepDAO.getAttackSteps(attackPattern.getCapecId());
+
+                            if (!attackSteps.isEmpty()) {
+                                for (AttackStep attackStep: attackSteps) {
+                                    TreeItem<String> attackStepItem = new TreeItem<>(attackStep.toString());
+                                    attackPatternItem.getChildren().add(attackStepItem);
+
+                                    // Get the step techniques for each step
+                                    List<AttackStepTechnique> stepTechniques = attackStepDAO.getAttackStepTechniques(attackPattern.getCapecId(), attackStep.getStep());
+                                    if (!stepTechniques.isEmpty()) {
+                                        for (AttackStepTechnique stepTechnique: stepTechniques) {
+                                            TreeItem<String> attackStepTechniqueItem = new TreeItem<>(stepTechnique.toString());
+                                            attackStepItem.getChildren().add(attackStepTechniqueItem);
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -165,10 +212,6 @@ public class TreePromptSceneController {
 
             // Generate attack tree and get root node
             TreeItem<String> rootNode = generateAttackTree();
-
-            // save attack tree data to DB, specifically evalID, root node, year from and year to for access later
-            evaluationDAO.saveAttackTreeData(evaluationDAO.getLatestEvalID(), currentEvaluation.getCriticalSystemName(), yearFrom, yearTo);
-
 
             // Navigate to TreeView Scene and display tree
             try {

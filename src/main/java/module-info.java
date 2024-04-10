@@ -12,6 +12,8 @@ module com.example.securityevaluationtool {
     requires java.sql;
     requires org.json;
     requires org.apache.commons.csv;
+    requires org.apache.pdfbox;
+    requires java.desktop;
 
     opens com.example.securityevaluationtool to javafx.fxml;
     exports com.example.securityevaluationtool;

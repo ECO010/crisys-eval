@@ -7,10 +7,23 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.SnapshotParameters;
 import javafx.scene.control.*;
+import javafx.scene.image.*;
+import javafx.scene.paint.Color;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 
+import java.awt.image.BufferedImage;
+import java.awt.image.WritableRaster;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -268,17 +281,127 @@ public class TreeViewSceneController {
         }
     }
 
-    // Get Data from The tree view
     // Need all nodes expanded so the user can see all nodes connected to the asset
-    // Each Asset is a different page
-    // put them in a pdf and save to user's system
+    // Snapshot of the treeView scene that is showing (note treeView is null because of the way the application is designed, how can we work around this)
+    // Don't want to show the root node only the children and their descendants
+    // put them in a pdf and let the user choose where to save them
     @FXML
     private void onSaveTreeAsPDF() {
-        System.out.println("TODO");
+        TreeItem<String> rootNode = attackTreeView.getRoot();
+        if (rootNode != null) {
+            // Expand all nodes
+            expandTree(rootNode);
+
+            // Capture the tree view as an image
+            WritableImage image = captureTreeView();
+
+            // Save the image to a PDF file
+            saveTreesToPDF(image);
+        }
+        else {
+            // Handle the case where the root node is null
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText(null);
+            alert.setContentText("No attack tree data available to save.");
+            alert.showAndWait();
+        }
+    }
+
+    public WritableImage captureTreeView() {
+        // Get the width and height of the TreeView
+        double width = attackTreeView.getWidth();
+        double height = attackTreeView.getHeight();
+
+        // Create a new WritableImage with the specified width and height
+        WritableImage image = new WritableImage((int) width, (int) height);
+
+        // Snapshot the TreeView to get a snapshot of its current appearance
+        SnapshotParameters params = new SnapshotParameters();
+        params.setFill(Color.TRANSPARENT); // Make background transparent
+        Image snapshot = attackTreeView.snapshot(params, null);
+
+        // Get the PixelReader from the snapshot
+        PixelReader pixelReader = snapshot.getPixelReader();
+
+        // Get the PixelWriter from the WritableImage
+        PixelWriter pixelWriter = image.getPixelWriter();
+
+        // Iterate over each pixel in the snapshot and copy its color to the WritableImage
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                // Get the color of the pixel at (x, y) from the PixelReader
+                Color color = pixelReader.getColor(x, y);
+                // Set the color of the corresponding pixel in the WritableImage using the PixelWriter
+                pixelWriter.setColor(x, y, color);
+            }
+        }
+
+        // Return the WritableImage
+        return image;
+    }
+
+    private void saveTreesToPDF(WritableImage image) {
+        // Show a directory chooser to let the user select the save location
+        DirectoryChooser directoryChooser = new DirectoryChooser();
+        directoryChooser.setTitle("Select Save Location");
+        File selectedDirectory = directoryChooser.showDialog(attackTreeView.getScene().getWindow());
+
+        if (selectedDirectory != null) {
+            try {
+                // Create a new PDF document
+                PDDocument document = new PDDocument();
+                PDPage page = new PDPage(PDRectangle.A4);
+                document.addPage(page);
+
+                // Convert the WritableImage to a BufferedImage
+                BufferedImage bufferedImage = new BufferedImage((int) image.getWidth(), (int) image.getHeight(), BufferedImage.TYPE_INT_RGB);
+                PixelReader pixelReader = image.getPixelReader();
+                for (int y = 0; y < image.getHeight(); y++) {
+                    for (int x = 0; x < image.getWidth(); x++) {
+                        bufferedImage.setRGB(x, y, pixelReader.getArgb(x, y));
+                    }
+                }
+
+                // Create a PDImageXObject from the BufferedImage
+                PDImageXObject pdImage = LosslessFactory.createFromImage(document, bufferedImage);
+
+                // Add the image to the PDF page
+                PDPageContentStream contentStream = new PDPageContentStream(document, page);
+                contentStream.drawImage(pdImage, 0, 0, page.getMediaBox().getWidth(), page.getMediaBox().getHeight());
+                contentStream.close();
+
+                // Save the PDF document to the selected directory
+                File pdfFile = new File(selectedDirectory, "attack_tree.pdf");
+                document.save(pdfFile);
+                document.close();
+
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Save Successful");
+                alert.setHeaderText(null);
+                alert.setContentText("Attack tree saved as PDF: " + pdfFile.getAbsolutePath());
+                alert.showAndWait();
+            } catch (IOException e) {
+                e.printStackTrace();
+                // Handle the exception
+            }
+        }
+    }
+
+    private void expandTree(TreeItem<String> root) {
+        // Expand the current node
+        root.setExpanded(true);
+
+        // Recursively expand all child nodes
+        for (TreeItem<String> child : root.getChildren()) {
+            expandTree(child);
+        }
     }
 
     @FXML
     private void onReturnClick(ActionEvent event) {
+        DataManager.getInstance().clearAllData();
+        DataManager.getInstance().clearOpenStages();
         try {
             // Load the FXML file of the landing scene
             FXMLLoader loader = new FXMLLoader(getClass().getResource("landing-scene.fxml"));
@@ -319,7 +442,11 @@ public class TreeViewSceneController {
 
     // Opens The survey window if it isn't already open, brings it into focus if it is.
     @FXML
-    private void onContinueEvaluation(/*ActionEvent event*/) {
+    private void onContinueEvaluation(ActionEvent event) {
+        // Hide the tree view scene, but store it
+        Stage currentStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+        DataManager.getInstance().addOpenStage(currentStage);
+
         // Check if preparedness window is already open.
         // If it is, bring it into focus
         Stage preparednessStage = getPreparednessStage();
@@ -334,9 +461,17 @@ public class TreeViewSceneController {
             // close attack and weakness cards
             closeAllAttackCards();
             closeAllWeaknessCards();
+
+            currentStage.hide();
+
             System.out.println(currentEvaluation.getCriticalSystemName());
             System.out.println(retrievedEvaluationAssets.size());
-            System.out.println(retrievedEvaluationAssets.get(0).getAssetName());
+
+            // TESTING
+            for (EvaluationAsset evalAsset: retrievedEvaluationAssets) {
+                System.out.println("Current Asset Name: "+evalAsset.getAssetName());
+                System.out.println("Current Asset Eval ID: "+evalAsset.getEvaluationID());
+            }
 
             // Navigate to the Tree Prompt Screen
             try {

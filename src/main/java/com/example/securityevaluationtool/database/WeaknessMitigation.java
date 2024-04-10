@@ -19,4 +19,9 @@ public class WeaknessMitigation {
 
     private String mitigationDescription;
     private String cweId;
+
+    @Override
+    public String toString() {
+        return "***Potential Mitigation: " + mitigationDescription.trim();
+    }
 }

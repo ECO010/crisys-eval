@@ -206,6 +206,7 @@ public class AssetDeclarationController {
                 // Save the assets
                 evaluationDAO.saveEvaluationAssets(evaluationAssetsToSave);
                 System.out.println("Assets saved successfully.");
+                DataManager.getInstance().setEvaluationAssets(evaluationAssetsToSave);
 
                 // Navigate to the Tree Prompt Screen
                 System.out.println("All fields filled. Navigating.");

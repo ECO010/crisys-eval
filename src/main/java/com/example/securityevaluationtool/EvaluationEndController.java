@@ -10,6 +10,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TreeView;
@@ -107,6 +108,7 @@ public class EvaluationEndController {
 
     @FXML
     private void onReturnClick(ActionEvent event) {
+        DataManager.getInstance().clearOpenStages();
         try {
             // Load the FXML file of the landing scene
             FXMLLoader loader = new FXMLLoader(getClass().getResource("landing-scene.fxml"));
@@ -115,6 +117,7 @@ public class EvaluationEndController {
             // Get the controller of the landing scene
             LandingSceneController landingSceneController = loader.getController();
             TreeViewSceneController treeViewSceneController = new TreeViewSceneController();
+
             // Get a list of all open windows
             List<Window> openWindows = Window.getWindows();
 
@@ -205,15 +208,22 @@ public class EvaluationEndController {
                 for (String data : attackTreeData) {
                     writer.write(data + "\n");
                 }*/
-
-                System.out.println("CSV file saved successfully.");
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Save Successful");
+                alert.setHeaderText(null);
+                alert.setContentText("Evaluation data saved to: " + filePath);
+                alert.showAndWait();
             } catch (IOException e) {
                 e.printStackTrace();
                 // Handle the exception
             }
         }
         else {
-            System.out.println("No directory selected.");
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("No directory selected");
+            alert.setHeaderText(null);
+            alert.setContentText("Please select a directory to save the file to");
+            alert.showAndWait();
         }
     }
 }

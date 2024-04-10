@@ -73,6 +73,7 @@ public class EvaluationStartController {
                 evaluation.setEvaluationDate(formattedDateTime);
 
                 evaluationDAO.saveEvaluation(evaluation);
+                DataManager.getInstance().setCurrentEvaluation(evaluation);
 
                 // Navigate to the Asset Declaration Screen
                 try {
@@ -81,7 +82,7 @@ public class EvaluationStartController {
 
                     AssetDeclarationController assetDeclarationController = loader.getController();
 
-                    // Pass the Evaluation object to the AssetDeclarationController
+                    // Pass the Evaluation object to the AssetDeclarationController (should take this out)
                     assetDeclarationController.setCurrentEvaluation(evaluation);
 
                     Stage stage = new Stage();

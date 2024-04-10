@@ -7,6 +7,7 @@ public class AttackStep {
     private String phase;
     private String attackStepDescription;
     public int capecId;
+    private List <AttackStepTechnique> attackStepTechniques;
 
     public void setStep(String step) {
         this.step = step;
@@ -38,5 +39,18 @@ public class AttackStep {
 
     public int getCapecId() {
         return capecId;
+    }
+
+    public List<AttackStepTechnique> getAttackStepTechniques() {
+        return attackStepTechniques;
+    }
+
+    public void setAttackStepTechniques(List<AttackStepTechnique> attackStepTechniques) {
+        this.attackStepTechniques = attackStepTechniques;
+    }
+
+    @Override
+    public String toString() {
+        return "Execution Flow Step-"+step + ": " + attackStepDescription;
     }
 }

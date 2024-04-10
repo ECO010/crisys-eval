@@ -19,4 +19,9 @@ public class Mitigation {
     public int getCapecId() {
         return capecId;
     }
+
+    @Override
+    public String toString() {
+        return "***Potential Mitigation: " + mitigationDescription.trim();
+    }
 }
