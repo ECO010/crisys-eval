@@ -221,13 +221,13 @@ public class PreparednessWindowController {
             Double averageEPSSTotal = 0.0;
 
             // Loop through each CWE node
+            Set<String> uniqueCVEs = new HashSet<>(); // Storing unique CVEs
             for (TreeItem<String> cweNode : cweNodes) {
 
                 // Get the list of Attack Patterns (CAPECs) under the CWE node
                 List<TreeItem<String>> cweNodeChildren = cweNode.getChildren();
 
                 // Storing CAPECs and CVEs as Sets because they automatically remove duplicates
-                Set<String> uniqueCVEs = new HashSet<>(); // Storing unique CVEs
                 Set<Integer> uniqueAttackPatterns = new HashSet<>(); // Storing unique CAPECs
 
                 // Go through CWE, get the score, the total score / number of CWEs to get the score for this section
@@ -256,10 +256,13 @@ public class PreparednessWindowController {
                 numOfLinkedAttackPatterns += uniqueAttackPatterns.size();
 
                 // get the average cvss score for each CWE linked to the asset node and add them
-                averageCVSSTotal += icsAssetVulnerabilityDAO.getAverageCVSSForCWE(cweId, yearFrom, yearTo);
+                averageCVSSTotal += icsAssetVulnerabilityDAO.getAverageCVSSForCWE(cweId, assetType, yearFrom, yearTo);
 
                 // for each CWE, get the linked CVEs
                 String linkedCVEs = commonWeaknessEnumerationDAO.getLinkedCVEs(cweId, assetType, yearFrom, yearTo);
+
+                // test the CVEs fetched
+                System.out.println(linkedCVEs);
 
                 // CVEs come as a single string with commas (i.e. CVE2024-xx, CVE2023-xx).
                 // Split by commas
@@ -268,17 +271,16 @@ public class PreparednessWindowController {
                 // update the value of averageEPSSTotal with the value fetched from each CVE
                 if (!linkedCVEs.isEmpty()) {
                     String[] cveArray = linkedCVEs.split(",\\s*");
-
-                    // Add CVEs to the Unique CVE set
                     uniqueCVEs.addAll(Arrays.asList(cveArray));
-
-                    // set the number of linked CVEs
-                    numOfLinkedCVEsToAsset += uniqueCVEs.size();
-
-                    // Query the database to retrieve total EPSS score for CVEs linked to each CWE
-                    averageEPSSTotal = icsAssetVulnerabilityDAO.getTotalEPSSForLinkedCVEs(Arrays.asList(cveArray));
                 }
             }
+            // set the number of linked CVEs
+            numOfLinkedCVEsToAsset += uniqueCVEs.size();
+
+            // Convert the set of unique CVEs to a list for further processing
+            List<String> uniqueCVEsList = new ArrayList<>(uniqueCVEs);
+            // Query the database to retrieve total EPSS score for CVEs linked to each CWE
+            averageEPSSTotal = icsAssetVulnerabilityDAO.getTotalEPSSForLinkedCVEs(uniqueCVEsList);
 
             // TESTING VALUES
             System.out.println("average cvss total for asset: " + currentAssetName + " is: " + averageCVSSTotal);
