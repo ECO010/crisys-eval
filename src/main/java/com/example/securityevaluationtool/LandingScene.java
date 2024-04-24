@@ -22,6 +22,10 @@ public class LandingScene extends Application {
         stage.setTitle(landingSceneController.SCENE_TITLE);
         stage.setScene(scene);
 
+        // Get the controller instance
+        LandingSceneController controller = fxmlLoader.getController();
+        controller.setScene(scene);
+
         // Set the close request handler
         stage.setOnCloseRequest(this::handleCloseRequest);
 

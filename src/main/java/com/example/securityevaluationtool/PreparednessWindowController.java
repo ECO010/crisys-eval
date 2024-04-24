@@ -16,7 +16,6 @@ import java.io.IOException;
 import java.util.*;
 
 // TODO: Look through ADTool to see their conversion to XML and rendering to PDF
-//  *** Save Tree Data (Include mitigations as output) ***
 //  Clean up (get rid of personal info and briefly clean code), package and submit
 
 public class PreparednessWindowController {

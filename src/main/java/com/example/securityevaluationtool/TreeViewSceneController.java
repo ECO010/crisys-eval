@@ -1,6 +1,7 @@
 package com.example.securityevaluationtool;
 
 import com.example.securityevaluationtool.database.*;
+import com.itextpdf.kernel.geom.PageSize;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -287,114 +288,33 @@ public class TreeViewSceneController {
     // put them in a pdf and let the user choose where to save them
     @FXML
     private void onSaveTreeAsPDF() {
-        TreeItem<String> rootNode = attackTreeView.getRoot();
-        if (rootNode != null) {
-            // Expand all nodes
-            expandTree(rootNode);
-
-            // Capture the tree view as an image
-            WritableImage image = captureTreeView();
-
-            // Save the image to a PDF file
-            saveTreesToPDF(image);
-        }
-        else {
-            // Handle the case where the root node is null
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Error");
-            alert.setHeaderText(null);
-            alert.setContentText("No attack tree data available to save.");
-            alert.showAndWait();
-        }
-    }
-
-    public WritableImage captureTreeView() {
-        // Get the width and height of the TreeView
-        double width = attackTreeView.getWidth();
-        double height = attackTreeView.getHeight();
-
-        // Create a new WritableImage with the specified width and height
-        WritableImage image = new WritableImage((int) width, (int) height);
-
-        // Snapshot the TreeView to get a snapshot of its current appearance
-        SnapshotParameters params = new SnapshotParameters();
-        params.setFill(Color.TRANSPARENT); // Make background transparent
-        Image snapshot = attackTreeView.snapshot(params, null);
-
-        // Get the PixelReader from the snapshot
-        PixelReader pixelReader = snapshot.getPixelReader();
-
-        // Get the PixelWriter from the WritableImage
-        PixelWriter pixelWriter = image.getPixelWriter();
-
-        // Iterate over each pixel in the snapshot and copy its color to the WritableImage
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                // Get the color of the pixel at (x, y) from the PixelReader
-                Color color = pixelReader.getColor(x, y);
-                // Set the color of the corresponding pixel in the WritableImage using the PixelWriter
-                pixelWriter.setColor(x, y, color);
-            }
-        }
-
-        // Return the WritableImage
-        return image;
-    }
-
-    private void saveTreesToPDF(WritableImage image) {
-        // Show a directory chooser to let the user select the save location
+        // Prompt the user to select a directory
         DirectoryChooser directoryChooser = new DirectoryChooser();
-        directoryChooser.setTitle("Select Save Location");
+        directoryChooser.setTitle("Select Directory to Save PDF");
         File selectedDirectory = directoryChooser.showDialog(attackTreeView.getScene().getWindow());
 
         if (selectedDirectory != null) {
-            try {
-                // Create a new PDF document
-                PDDocument document = new PDDocument();
-                PDPage page = new PDPage(PDRectangle.A4);
-                document.addPage(page);
+            // Prepare the file path for the PDF file
+            String filePath = selectedDirectory.getAbsolutePath() + "/attack-tree.pdf";
 
-                // Convert the WritableImage to a BufferedImage
-                BufferedImage bufferedImage = new BufferedImage((int) image.getWidth(), (int) image.getHeight(), BufferedImage.TYPE_INT_RGB);
-                PixelReader pixelReader = image.getPixelReader();
-                for (int y = 0; y < image.getHeight(); y++) {
-                    for (int x = 0; x < image.getWidth(); x++) {
-                        bufferedImage.setRGB(x, y, pixelReader.getArgb(x, y));
-                    }
-                }
+            // Generate XML and PDF files
+            TreeItem<String> rootNode = attackTreeView.getRoot();
+            XMLGenerator.generateXML(rootNode, "attack-tree.xml");
+            PDFGenerator.generatePDF("attack-tree.xml", filePath, PageSize.A4);
 
-                // Create a PDImageXObject from the BufferedImage
-                PDImageXObject pdImage = LosslessFactory.createFromImage(document, bufferedImage);
-
-                // Add the image to the PDF page
-                PDPageContentStream contentStream = new PDPageContentStream(document, page);
-                contentStream.drawImage(pdImage, 0, 0, page.getMediaBox().getWidth(), page.getMediaBox().getHeight());
-                contentStream.close();
-
-                // Save the PDF document to the selected directory
-                File pdfFile = new File(selectedDirectory, "attack_tree.pdf");
-                document.save(pdfFile);
-                document.close();
-
-                Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                alert.setTitle("Save Successful");
-                alert.setHeaderText(null);
-                alert.setContentText("Attack tree saved as PDF: " + pdfFile.getAbsolutePath());
-                alert.showAndWait();
-            } catch (IOException e) {
-                e.printStackTrace();
-                // Handle the exception
-            }
-        }
-    }
-
-    private void expandTree(TreeItem<String> root) {
-        // Expand the current node
-        root.setExpanded(true);
-
-        // Recursively expand all child nodes
-        for (TreeItem<String> child : root.getChildren()) {
-            expandTree(child);
+            // Show success message
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Save Successful");
+            alert.setHeaderText(null);
+            alert.setContentText("Attack tree PDF saved to: " + filePath);
+            alert.showAndWait();
+        } else {
+            // Show error message if no directory selected
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("No directory selected");
+            alert.setHeaderText(null);
+            alert.setContentText("Please select a directory to save the PDF file to");
+            alert.showAndWait();
         }
     }
 

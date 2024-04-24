@@ -5,11 +5,13 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -21,6 +23,12 @@ public class EvaluationListController {
     public final String SCENE_TITLE = "List Of Evaluations";
     @FXML
     private Button deleteButton;
+
+    @FXML
+    private AnchorPane anchorPane;
+
+    @FXML
+    private Button backBtn;
 
     @FXML
     private TableColumn<Evaluation, String> evalDT;
@@ -50,6 +58,8 @@ public class EvaluationListController {
     private String assetType;
     private String assetName;
 
+    private Scene scene;
+
     // DAO Objects
     private final ICSAssetVulnerabilityDAO icsAssetVulnerabilityDAO = new ICSAssetVulnerabilityDAO();
     private final AttackPatternDAO attackPatternDAO = new AttackPatternDAO();
@@ -73,6 +83,52 @@ public class EvaluationListController {
         // Make the table multi-select
         evaluationTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
     }
+/*
+
+    public void initializeLayoutListeners() {
+        scene.widthProperty().addListener((observable, oldValue, newValue) -> {
+            updateLayout((double) newValue, scene.getHeight());
+        });
+        scene.heightProperty().addListener((observable, oldValue, newValue) -> {
+            updateLayout(scene.getWidth(), (double) newValue);
+        });
+    }
+
+    public void setScene(Scene scene) {
+        this.scene = scene;
+        initializeLayoutListeners();
+        attachLayoutListeners();
+    }
+
+    public void attachLayoutListeners() {
+        if (scene != null) {
+            scene.widthProperty().addListener((observable, oldValue, newValue) -> {
+                updateLayout((double) newValue, scene.getHeight());
+            });
+            scene.heightProperty().addListener((observable, oldValue, newValue) -> {
+                updateLayout(scene.getWidth(), (double) newValue);
+            });
+        }
+    }
+
+    private void updateLayout(double newWidth, double newHeight) {
+        // Update the layout of the elements based on the new window size
+        anchorPane.setPrefWidth(newWidth);
+        anchorPane.setPrefHeight(newHeight);
+
+        // Set the width of the evaluationTable
+        evaluationTable.setPrefWidth(newWidth * 0.75);
+        systemName.setPrefWidth(newWidth * 0.3);
+        evalDT.setPrefWidth(newWidth * 0.3);
+        evaluationScore.setPrefWidth(newWidth * 0.3);
+        evaluationID.setPrefWidth(newWidth * 0.3);
+
+        // Adjust the layout of other elements in the scene
+        deleteButton.setLayoutX((newWidth - deleteButton.getPrefWidth()) / 2);
+        loadButton.setLayoutX((newWidth - loadButton.getPrefWidth()) / 2);
+        backBtn.setLayoutX((newWidth - backBtn.getPrefWidth()) / 2);
+    }
+*/
 
     // Make sure a row is selected
     // Delete all assets linked to the selected evalID 1st, then delete the evaluation as a whole

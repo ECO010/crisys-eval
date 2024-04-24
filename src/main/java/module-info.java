@@ -14,6 +14,9 @@ module com.example.securityevaluationtool {
     requires org.apache.commons.csv;
     requires org.apache.pdfbox;
     requires java.desktop;
+    requires kernel;
+    requires layout;
+    requires io;
 
     opens com.example.securityevaluationtool to javafx.fxml;
     exports com.example.securityevaluationtool;

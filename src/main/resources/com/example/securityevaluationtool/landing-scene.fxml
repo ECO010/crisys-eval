@@ -8,14 +8,14 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.securityevaluationtool.LandingSceneController">
+<AnchorPane fx:id="anchorPane" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.securityevaluationtool.LandingSceneController">
 
-    <Label alignment="CENTER" contentDisplay="CENTER" layoutX="150.0" layoutY="4.0" prefHeight="63.0" prefWidth="300.0" text="CriSysEval">
+    <Label fx:id="titleLabel" alignment="CENTER" contentDisplay="CENTER" layoutX="150.0" layoutY="4.0" prefHeight="63.0" prefWidth="300.0" text="CriSysEval">
         <font>
             <Font name="Arial Bold" size="20.0" />
         </font>
     </Label>
-    <Label alignment="CENTER" contentDisplay="CENTER" layoutX="157.0" layoutY="64.0" prefHeight="33.0" prefWidth="287.0" text="A Security Evaluation Tool For Critical Systems">
+    <Label fx:id="sloganLabel" alignment="CENTER" contentDisplay="CENTER" layoutX="157.0" layoutY="64.0" prefHeight="33.0" prefWidth="287.0" text="A Security Evaluation Tool For Critical Systems">
         <font>
             <Font name="Arial" size="13.0" />
         </font>
@@ -24,11 +24,11 @@
         <!-- No need to specify the image source here -->
     </ImageView>
 
-    <HBox alignment="CENTER_RIGHT" layoutX="59.0" layoutY="348.0" prefHeight="54.0" prefWidth="497.0" spacing="10.0">
+    <HBox fx:id="buttonHBox" alignment="CENTER_RIGHT" layoutX="59.0" layoutY="348.0" prefHeight="54.0" prefWidth="497.0" spacing="10.0">
         <children>
-            <Button mnemonicParsing="false" onAction="#onBeginEvaluationClick" prefHeight="25.0" prefWidth="147.0" text="Begin New Evaluation" />
-         <Button mnemonicParsing="false" onAction="#onPastEvaluationClick" text="View Past Evaluations" />
-            <Button mnemonicParsing="false" onAction="#onCheckIcsAssetClick" text="Check ICS Vulnerabilities Database" />
+            <Button fx:id="beginNewButton" mnemonicParsing="false" onAction="#onBeginEvaluationClick" prefHeight="25.0" prefWidth="147.0" text="Begin New Evaluation" />
+         <Button fx:id="viewPastButton" mnemonicParsing="false" onAction="#onPastEvaluationClick" text="View Past Evaluations" />
+            <Button fx:id="checkCisaDbButton" mnemonicParsing="false" onAction="#onCheckIcsAssetClick" text="Check ICS Vulnerabilities Database" />
         </children>
         <padding>
             <Insets top="20.0" />
