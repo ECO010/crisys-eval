@@ -8,7 +8,6 @@ public class DatabaseConnector {
     public static Connection connect() {
         Connection conn = null;
         try {
-            // The URL specifies the path to your SQLite database
             String url = "jdbc:sqlite:src/main/resources/db/capecdb01";
             conn = DriverManager.getConnection(url);
             System.out.println("Connected to SQLite database.");
