@@ -33,7 +33,7 @@ public class ICSAsset {
 
         List<ICSAsset> icsAssetsToSave = new ArrayList<>();
 
-        String csvFilePath = "C:\\Users\\okonj\\Desktop\\SWANSEA FOLDER\\Dissertation (Project)\\ICS Advisory\\Unchanged\\ICS Asset & Purdue Model Levels for CISA ICS Advisories_ICS Asset & PM Level View_Table (Asset Types).csv";
+        String csvFilePath = "your file path here";
 
         try (Reader reader = new FileReader(csvFilePath);
              CSVParser csvParser = new CSVParser(reader, CSVFormat.DEFAULT.withHeader())) {

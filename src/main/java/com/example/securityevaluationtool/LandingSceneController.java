@@ -18,6 +18,11 @@ import javafx.stage.Stage;
 import java.io.IOException;
 import java.util.Objects;
 
+/**
+ * Controller class for the landing scene
+ * ICS Operations image design attributed to Eucalyp
+ * URL: https://www.flaticon.com/free-icons/system" title="system icons
+ */
 public class LandingSceneController {
 
     public final String SCENE_TITLE = "CriSysEval: A Security Evaluation Tool For Critical Systems";

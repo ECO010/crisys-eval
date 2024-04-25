@@ -194,7 +194,7 @@ public class AttackPattern {
         // List of attack patterns that will be saved to the db
         List<AttackPattern> attackPatternsToSave = new ArrayList<>();
 
-        String filePath = "C:\\Users\\okonj\\Desktop\\SWANSEA FOLDER\\Dissertation (Project)\\CAPEC & CWE\\CAPEC xmls\\capec_latest.xml";
+        String filePath = "your file path here";
         try {
             // Create a FileInputStream to read the local file
             FileInputStream inputStream = new FileInputStream(filePath);

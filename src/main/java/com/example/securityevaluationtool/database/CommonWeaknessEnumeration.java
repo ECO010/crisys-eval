@@ -76,7 +76,7 @@ public class CommonWeaknessEnumeration {
         // List of attack patterns that will be saved to the db
         List<CommonWeaknessEnumeration> weaknessesToSave = new ArrayList<>();
 
-        String filePath = "C:\\Users\\okonj\\Desktop\\SWANSEA FOLDER\\Dissertation (Project)\\cwec_latest.xml\\cwec_v4.13.xml";
+        String filePath = "your file path here";
         try {
             // Create a FileInputStream to read the local file
             FileInputStream inputStream = new FileInputStream(filePath);

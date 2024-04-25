@@ -56,7 +56,7 @@ public class AttackCategory {
     public List<AttackCategory> parseXMLDataFromCAPEC() {
         List<AttackCategory> attackCategoriesToSave = new ArrayList<>();
 
-        String filePath = "C:\\Users\\okonj\\Desktop\\SWANSEA FOLDER\\Dissertation (Project)\\CAPEC & CWE\\CAPEC xmls\\Mechanisms of Attack.xml\\1000.xml";
+        String filePath = "your file path here";
 
         try {
             // Create a FileInputStream to read the local file

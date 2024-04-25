@@ -42,7 +42,7 @@ public class EpssRecord {
 
         List<EpssRecord> epssRecordsToSave = new ArrayList<>();
 
-        String csvFilePath = "C:\\Users\\okonj\\Desktop\\SWANSEA FOLDER\\Dissertation (Project)\\EPSS\\epss_scores-2024-03-26.csv";
+        String csvFilePath = "your file path here";
 
         try (Reader reader = new FileReader(csvFilePath);
              CSVParser csvParser = new CSVParser(reader, CSVFormat.DEFAULT.withHeader())) {

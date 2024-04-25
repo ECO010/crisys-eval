@@ -44,8 +44,7 @@ public class MitreAttackRelationship {
 
         try {
             // Read JSON file
-            //Path jsonFilePath = Paths.get("C:\\Users\\okonj\\Desktop\\SWANSEA FOLDER\\Dissertation (Project)\\cti-ATT-CK-v14.1\\cti-ATT-CK-v14.1\\ics-attack\\ics-attack.json");
-            Path jsonFilePath = Paths.get("C:\\Users\\okonj\\Desktop\\SWANSEA FOLDER\\Dissertation (Project)\\cti-ATT-CK-v14.1\\cti-ATT-CK-v14.1\\enterprise-attack\\enterprise-attack.json");
+            Path jsonFilePath = Paths.get("your file path here");
 
             // Read the content of the file
             List<String> lines = Files.readAllLines(jsonFilePath);

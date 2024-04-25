@@ -15,9 +15,6 @@ import javafx.stage.Stage;
 import java.io.IOException;
 import java.util.*;
 
-// TODO: Look through ADTool to see their conversion to XML and rendering to PDF
-//  Clean up (get rid of personal info and briefly clean code), package and submit
-
 public class PreparednessWindowController {
     public final String SCENE_TITLE = "Preparedness Survey";
 
@@ -262,7 +259,7 @@ public class PreparednessWindowController {
                 String linkedCVEs = commonWeaknessEnumerationDAO.getLinkedCVEs(cweId, assetType, yearFrom, yearTo);
 
                 // test the CVEs fetched
-                System.out.println(linkedCVEs);
+                System.out.println(linkedCVEs + "for " + cweId);
 
                 // CVEs come as a single string with commas (i.e. CVE2024-xx, CVE2023-xx).
                 // Split by commas
