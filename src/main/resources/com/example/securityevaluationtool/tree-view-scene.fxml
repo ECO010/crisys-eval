@@ -5,9 +5,9 @@
 <?import javafx.scene.control.TreeView?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="520.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/11" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.securityevaluationtool.TreeViewSceneController">
+<AnchorPane fx:id="anchorPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="520.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/11" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.securityevaluationtool.TreeViewSceneController">
    <children>
-      <Button layoutX="153.0" layoutY="464.0" mnemonicParsing="false" onAction="#onSaveTreeAsPDF" text="Save Tree As PDF">
+      <Button fx:id="savePDFBtn" layoutX="153.0" layoutY="464.0" mnemonicParsing="false" onAction="#onSaveTreeAsPDF" text="Save Tree As PDF">
          <tooltip>
             <Tooltip text="Save this particular tree as a pdf to scrutinize some other time" />
          </tooltip></Button>

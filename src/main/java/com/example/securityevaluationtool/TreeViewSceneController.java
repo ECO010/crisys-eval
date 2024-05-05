@@ -9,6 +9,7 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.layout.AnchorPane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
@@ -37,6 +38,13 @@ public class TreeViewSceneController {
     private Evaluation currentEvaluation;
     private List<EvaluationAsset> retrievedEvaluationAssets;
 
+  /*  private Scene scene;
+
+    public void setScene(Scene scene) {
+        this.scene = scene;
+        //initializeLayoutListeners();
+    }*/
+
     public void getCurrentEvaluation(Evaluation currentEvaluation) {
         this.currentEvaluation = currentEvaluation;
     }
@@ -57,10 +65,71 @@ public class TreeViewSceneController {
     private TreeView<String> attackTreeView;
 
     @FXML
+    private AnchorPane anchorPane;
+
+    @FXML
     public Button continueBtn;
 
     @FXML
+    private Button savePDFBtn;
+
+    @FXML
     public Button returnBtn;
+
+    /*public void initialize() {
+        // Set the scene
+        scene = anchorPane.getScene();
+        setScene(scene);
+
+        // Initialize layout listeners
+        initializeLayoutListeners(scene);
+    }
+
+    private void initializeLayoutListeners(Scene scene) {
+        if (scene != null) {
+            scene.widthProperty().addListener((observable, oldValue, newValue) -> {
+                updateLayout((double) newValue, scene.getHeight());
+            });
+            scene.heightProperty().addListener((observable, oldValue, newValue) -> {
+                updateLayout(scene.getWidth(), (double) newValue);
+            });
+        }
+    }
+
+    private void updateLayout(double newWidth, double newHeight) {
+        // Update the layout of the elements based on the new window size
+        // For example, you can resize and reposition the elements using their
+        // prefWidth, prefHeight, layoutX, and layoutY properties
+
+        // Adjust the size of the AnchorPane
+        anchorPane.setPrefWidth(newWidth);
+        anchorPane.setPrefHeight(newHeight);
+
+        // Adjust the size and position of the TreeView
+        attackTreeView.setPrefWidth(newWidth * 0.8); // 80% of the window width
+        attackTreeView.setPrefHeight(newHeight * 0.7); // 70% of the window height
+        attackTreeView.setLayoutX((newWidth - attackTreeView.getPrefWidth()) / 2); // Center horizontally
+        attackTreeView.setLayoutY(20); // Adjust the vertical position as needed
+
+        // Adjust the size and position of the buttons
+        double buttonWidth = newWidth * 0.2; // 20% of the window width
+        double buttonHeight = newHeight * 0.1; // 10% of the window height
+
+        continueBtn.setPrefWidth(buttonWidth);
+        continueBtn.setPrefHeight(buttonHeight);
+        continueBtn.setLayoutX(20); // Adjust the horizontal position as needed
+        continueBtn.setLayoutY(newHeight - buttonHeight - 20); // Align at the bottom with a margin of 20
+
+        savePDFBtn.setPrefWidth(buttonWidth);
+        savePDFBtn.setPrefHeight(buttonHeight);
+        savePDFBtn.setLayoutX(20 + buttonWidth + 10); // Adjust the horizontal position with some spacing
+        savePDFBtn.setLayoutY(newHeight - buttonHeight - 20); // Align at the bottom with a margin of 20
+
+        returnBtn.setPrefWidth(buttonWidth);
+        returnBtn.setPrefHeight(buttonHeight);
+        returnBtn.setLayoutX(newWidth - buttonWidth - 20); // Align at the right with a margin of 20
+        returnBtn.setLayoutY(newHeight - buttonHeight - 20); // Align at the bottom with a margin of 20
+    }*/
 
     // Method to set the root node of the TreeView
     public void setRootNode(TreeItem<String> rootNode, boolean isAttachContextMenu) {
